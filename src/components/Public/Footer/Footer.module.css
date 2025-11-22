@@ -1,0 +1,108 @@
+.footerWrap {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+
+    background: #fff;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
+
+    z-index: 100;
+
+    opacity: 0;
+    transform: translateY(100%);
+    transition: 0.1s linear;
+}
+
+.footerWrap.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.content {
+    height: var(--footer-height);
+    display: flex;
+    background: var(--gradient-primary);
+    position: relative;
+}
+
+.content::after {
+    content: '';
+    height: 100%;
+    width: 0.5px;
+    background-color: var(--text-primary-color);
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Nút giỏ hàng */
+.cartBtn {
+    position: relative;
+    border: none;
+    background: transparent;
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.3s ease;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+/* Số lượng */
+.amount {
+    position: absolute;
+    top: 12px;
+    right: 42%;
+    transform: translateX(50%);
+
+    background: #f34545;
+    color: white;
+    padding: 2px 7px;
+    font-size: 12px;
+    font-weight: 700;
+    border-radius: 50%;
+}
+
+/* Nút Xác nhận */
+.confirmBtn {
+    border: none;
+    font-size: 20px;
+    font-weight: 700;
+    color: #083a5b;
+    text-decoration: none;
+    letter-spacing: 0.5px;
+    background: var(--gradient-button);
+
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+
+    transition: 0.3s ease;
+    text-shadow: var(--shadow-drop);
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25)
+}
+
+.cartBtn:active,
+.confirmBtn:active {
+    transform: scale(0.92);
+}
+
+@media (min-width: 431px) {
+    .footerWrap {
+        max-width: 430px;
+        position: fixed;
+        left: 50%;
+        transform: translate(-50%, 100%);
+        width: 100%;
+        z-index: 100;
+    }
+
+    .footerWrap.show {
+        transform: translate(-50%, 0);
+    }
+}

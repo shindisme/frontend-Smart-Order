@@ -1,0 +1,49 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.3s ease;
+    z-index: 40;
+}
+
+.overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.cartModalWrap {
+    background: #fff;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    min-height: 70vh;
+    z-index: 50;
+
+    opacity: 0;
+    transform: translateY(100%);
+    pointer-events: none;
+    transition: 0.35s ease-in-out;
+}
+
+.cartModalWrap.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+
+@media (min-width: 431px) {
+    .cartModalWrap {
+        max-width: 430px;
+        left: 50%;
+        transform: translate(-50%, 100%);
+        width: 100%;
+    }
+
+    .cartModalWrap.show {
+        transform: translate(-50%, 0);
+    }
+}

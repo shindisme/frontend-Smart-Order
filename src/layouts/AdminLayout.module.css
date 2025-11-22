@@ -1,0 +1,40 @@
+.adminLayout {
+    display: flex;
+    min-height: 100vh;
+    background: var(--color-bg);
+}
+
+.sidebar {
+    width: 260px;
+    background: #111827;
+    color: #f9fafb;
+    display: flex;
+    flex-direction: column;
+}
+
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+/* header vàng kem giống thanh trên cùng trong hình */
+.header {
+    height: 64px;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--color-border-soft);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--color-header);
+}
+
+.headerTitle {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-text-main);
+}
+
+.content {
+    padding: 20px;
+}

@@ -1,0 +1,14 @@
+.orderConfirmWrap {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+}
+
+@media (min-width: 431px) {
+    .orderConfirmWrap {
+        width: 100%;
+        max-width: var(--max-width-mobi);
+        margin: 0 auto;
+        background-color: var(--bg-color);
+    }
+}

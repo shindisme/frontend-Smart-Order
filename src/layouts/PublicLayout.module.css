@@ -1,0 +1,24 @@
+.publicLayout {
+    width: 100%;
+    background-color: var(--bg-color);
+}
+
+.container {
+    position: relative;
+    min-height: 100vh;
+}
+
+.content {
+    min-height: 100vh;
+    margin-left: 16px;
+    margin-right: 16px;
+}
+
+@media (min-width: 431px) {
+    .publicLayout {
+        width: 100%;
+        max-width: var(--max-width-mobi);
+        margin: 0 auto;
+        background-color: var(--bg-color);
+    }
+}
