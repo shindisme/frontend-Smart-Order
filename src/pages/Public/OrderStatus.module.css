@@ -1,0 +1,149 @@
+.orderStatusPage {
+    min-height: 100vh;
+    background: var(--bg-color, #f5f5f5);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    max-width: 430px;
+    margin: 0 auto;
+}
+
+.backButton {
+    color: var(--text-primary-color);
+    display: flex;
+    align-items: center;
+}
+
+.title {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary-color);
+}
+
+.main {
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 40px 20px;
+    text-align: center;
+}
+
+.successIcon {
+    margin-bottom: 24px;
+    animation: scaleIn 0.5s ease;
+}
+
+@keyframes scaleIn {
+    from {
+        transform: scale(0);
+        opacity: 0;
+    }
+
+    to {
+        transform: scale(1);
+        opacity: 1;
+    }
+}
+
+.successTitle {
+    font-size: 24px;
+    font-weight: 700;
+    color: #10b981;
+    margin-bottom: 12px;
+}
+
+.successMessage {
+    font-size: 15px;
+    color: #6b7280;
+    margin-bottom: 32px;
+}
+
+.orderInfo {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    text-align: left;
+}
+
+.infoRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+.infoRow:last-child {
+    border-bottom: none;
+}
+
+.infoRow span {
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.infoRow strong {
+    color: #111827;
+    font-size: 15px;
+}
+
+.totalAmount {
+    color: var(--text-orange-color, #f97316) !important;
+    font-size: 18px !important;
+}
+
+.statusBadge {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 6px 12px;
+    border-radius: 12px;
+    font-size: 13px !important;
+}
+
+.backHomeButton {
+    display: inline-block;
+    padding: 14px 32px;
+    background: var(--gradient-button);
+    color: var(--text-primary-color);
+    font-weight: 700;
+    border-radius: 12px;
+    text-decoration: none;
+    box-shadow: var(--shadow-inner);
+    text-shadow: var(--shadow-drop);
+    transition: opacity 0.2s;
+}
+
+.backHomeButton:hover {
+    opacity: 0.9;
+}
+
+.backHomeButton:active {
+    transform: scale(0.98);
+}
+
+/* Mobile responsive */
+@media (max-width: 430px) {
+    .main {
+        padding: 30px 16px;
+    }
+
+    .successIcon svg {
+        width: 60px;
+        height: 60px;
+    }
+
+    .successTitle {
+        font-size: 20px;
+    }
+
+    .orderInfo {
+        padding: 16px;
+    }
+}

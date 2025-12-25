@@ -23,11 +23,11 @@
 }
 
 .item {
-    background-color: #949393;
+    background-color: #fff;
     border-bottom-left-radius: 45px;
     border-top-right-radius: 45px;
     margin-bottom: 20px;
-    box-shadow: var(--shadow-drop);
+    box-shadow: var(--shadow-inner);
 }
 
 .item a {

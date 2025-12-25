@@ -1,4 +1,4 @@
-.footerWrap {
+.footer {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -6,7 +6,6 @@
 
     background: #fff;
     box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.15);
-
     z-index: 100;
 
     opacity: 0;
@@ -14,7 +13,7 @@
     transition: 0.1s linear;
 }
 
-.footerWrap.show {
+.footer.show {
     opacity: 1;
     transform: translateY(0);
 }
@@ -36,8 +35,8 @@
     transform: translateX(-50%);
 }
 
-/* Nút giỏ hàng */
-.cartBtn {
+/* Cart Button */
+.cartButton {
     position: relative;
     border: none;
     background: transparent;
@@ -52,8 +51,12 @@
     box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-/* Số lượng */
-.amount {
+.cartButton:active {
+    transform: scale(0.92);
+}
+
+/* Cart Badge */
+.cartBadge {
     position: absolute;
     top: 12px;
     right: 42%;
@@ -67,8 +70,8 @@
     border-radius: 50%;
 }
 
-/* Nút Xác nhận */
-.confirmBtn {
+/* Confirm Button */
+.confirmButton {
     border: none;
     font-size: 20px;
     font-weight: 700;
@@ -84,16 +87,15 @@
 
     transition: 0.3s ease;
     text-shadow: var(--shadow-drop);
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25)
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-.cartBtn:active,
-.confirmBtn:active {
+.confirmButton:active {
     transform: scale(0.92);
 }
 
 @media (min-width: 431px) {
-    .footerWrap {
+    .footer {
         max-width: 430px;
         position: fixed;
         left: 50%;
@@ -102,7 +104,7 @@
         z-index: 100;
     }
 
-    .footerWrap.show {
+    .footer.show {
         transform: translate(-50%, 0);
     }
 }

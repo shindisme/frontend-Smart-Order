@@ -1,8 +1,8 @@
-.menuTopWrap {
+.menuTop {
     padding-top: var(--header-height);
 }
 
-.menuTop {
+.menuTopContent {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -10,16 +10,12 @@
     gap: 12px;
 }
 
-.menuLeft {
+.menuTitle {
     display: flex;
     align-items: center;
     flex-shrink: 0;
     gap: 10px;
-}
-
-.menuLeft,
-.searchInputWrap {
-    transition: opacity 0.2s ease, transform 0.2s ease, max-width 0.2s ease;
+    transition: opacity 0.2s ease, transform 0.2s ease;
 }
 
 .title {
@@ -29,7 +25,7 @@
     letter-spacing: 1px;
 }
 
-.searchBtn {
+.searchButton {
     border: none;
     background: transparent;
     padding: 6px;
@@ -39,6 +35,11 @@
     justify-content: center;
     cursor: pointer;
     box-shadow: inset 0px 2px 4px rgba(33, 33, 33, 0.982);
+    flex-shrink: 0;
+}
+
+.searchButton:active {
+    transform: scale(0.95);
 }
 
 .divider {
@@ -47,17 +48,35 @@
     background-color: var(--text-primary-color);
 }
 
-.searchInputWrap {
+.searchContainer {
     flex: 1;
     display: flex;
     align-items: center;
+    animation: slideIn 0.2s ease;
+}
+
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
 }
 
 .searchInput {
     width: 100%;
     padding: 10px 14px;
     border-radius: 12px;
-    border: 1px solid #00456f;
+    border: 2px solid #00456f;
     font-size: 16px;
     outline: none;
+    transition: border-color 0.2s;
+}
+
+.searchInput:focus {
+    border-color: #0073a8;
 }

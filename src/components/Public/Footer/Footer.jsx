@@ -1,30 +1,37 @@
 import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
-import { ShoppingCart } from 'lucide-react';
+import { MdOutlineShoppingCart } from "react-icons/md";
 
-function Footer({ cartCount, showCart, setShowCart }) {
-    const isShow = cartCount > 0;
+function Footer({ cartCount, showCartModal, setShowCartModal }) {
+    const hasCartItems = cartCount > 0;
+
+    const handleToggleCart = () => {
+        setShowCartModal(!showCartModal);
+    };
 
     return (
-        <>
-            <div className={`${styles.footerWrap} ${isShow ? styles.show : ''}`}>
-                <div className={styles.content}>
+        <div className={`${styles.footer} ${hasCartItems ? styles.show : ''}`}>
+            <div className={styles.content}>
+                {/* Cart Button */}
+                <button
+                    className={styles.cartButton}
+                    onClick={handleToggleCart}
+                    aria-label="Giỏ hàng"
+                >
+                    <MdOutlineShoppingCart size={30} />
+                    <span className={styles.cartBadge}>{cartCount}</span>
+                </button>
 
-                    {/* Cart */}
-                    <button className={styles.cartBtn} onClick={() => setShowCart(!showCart)}>
-                        <ShoppingCart size={30} strokeWidth={2.3} />
-                        <span className={styles.amount}>{cartCount}</span>
-                    </button>
-
-                    {/* Xác nhận */}
-                    <Link to='/order-confirm' className={styles.confirmBtn}>
-                        Xác Nhận
-                    </Link>
-
-                </div>
-            </div >
-        </>
+                {/* Confirm Button */}
+                <Link
+                    to='/order-confirm'
+                    className={styles.confirmButton}
+                >
+                    Xác Nhận
+                </Link>
+            </div>
+        </div>
     );
-};
+}
 
 export default Footer;

@@ -1,0 +1,38 @@
+.pro-sidebar>.pro-sidebar-inner {
+    background: #070b22 !important;
+}
+
+.pro-sidebar .pro-sidebar-inner {
+    height: 100vh !important;
+    display: flex;
+    flex-direction: column;
+}
+
+.pro-sidebar .pro-sidebar-layout {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.pro-sidebar .pro-sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.pro-sidebar .pro-menu>ul>.pro-sub-menu>.pro-inner-list-item {
+    background: #2a2b2f !important;
+}
+
+.pro-sidebar {
+    height: 100vh !important;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+}
+
+.logoAdmin {
+    width: 40px;
+    height: 40px;
+}

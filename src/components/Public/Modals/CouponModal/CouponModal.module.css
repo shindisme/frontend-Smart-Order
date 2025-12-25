@@ -1,0 +1,91 @@
+.overlay {
+    position: fixed;
+    inset: 0;
+
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.modal {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    max-width: 430px;
+    margin: 0 auto;
+    background: #f4f7fe;
+    padding: 20px;
+    border-radius: 20px 20px 0 0;
+    animation: slideUp 0.25s ease;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+h3 {
+    margin-bottom: 16px;
+    font-weight: 700;
+}
+
+.inputRow {
+    display: flex;
+    gap: 10px;
+}
+
+.inputRow input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+    background: #fff;
+}
+
+.checkBtn {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    border: none;
+    background: var(--gradient-button);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
+}
+
+.resultBox {
+    margin-top: 18px;
+    min-height: 70px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+    font-size: 14px;
+}
+
+.invalid {
+    color: red;
+}
+
+.validBox {
+    color: green;
+    line-height: 1.4;
+}
+
+.applyBtn {
+    width: 100%;
+    margin-top: 20px;
+    padding: 14px;
+    border-radius: 12px;
+    border: none;
+    font-weight: 600;
+    font-size: 16px;
+    background: var(--gradient-button);
+    color: #333;
+}

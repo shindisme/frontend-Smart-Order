@@ -1,15 +1,32 @@
 .adminLayout {
     display: flex;
     min-height: 100vh;
+    margin-left: 270px;
     background: var(--color-bg);
+    transition: margin-left 0.25s ease;
+}
+
+.adminLayout.collapsed {
+    margin-left: 80px;
+    transition: margin-left 0.25s ease;
 }
 
 .sidebar {
-    width: 260px;
+    width: 270px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    z-index: 500;
     background: #111827;
     color: #f9fafb;
     display: flex;
     flex-direction: column;
+    transition: width 0.25s ease;
+}
+
+.sidebar.collapsed {
+    width: 80px;
 }
 
 .main {
@@ -18,7 +35,6 @@
     flex-direction: column;
 }
 
-/* header vàng kem giống thanh trên cùng trong hình */
 .header {
     height: 64px;
     padding: 0 20px;

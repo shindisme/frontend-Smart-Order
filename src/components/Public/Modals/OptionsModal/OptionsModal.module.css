@@ -1,0 +1,192 @@
+/* Overlay */
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: 0.28s ease;
+    z-index: 40;
+}
+
+.overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Modal */
+.modal {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    width: 100%;
+    max-width: 430px;
+    max-height: 70vh;
+
+    color: var(--text-primary-color);
+    background: #fff;
+    border-radius: 18px 18px 0 0;
+
+    display: flex;
+    flex-direction: column;
+
+    transform: translateX(-50%);
+    opacity: 0;
+    transition: 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    pointer-events: none;
+    z-index: 50;
+}
+
+.modal.show {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+/* Header */
+.header {
+    padding: 18px 18px 12px 18px;
+    border-bottom: 1px solid #f0f0f0;
+    flex-shrink: 0;
+}
+
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.closeButton {
+    border: none;
+    background: none;
+    font-size: 22px;
+    padding: 8px;
+    cursor: pointer;
+}
+
+/* Content */
+.content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 18px;
+}
+
+/* Item Info */
+.itemInfo {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.itemImage {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    object-fit: cover;
+}
+
+.itemDetails {
+    flex: 1;
+}
+
+.itemName {
+    font-size: 16px;
+    margin-bottom: 4px;
+}
+
+.itemPrice {
+    font-size: 16px;
+    font-weight: bold;
+    color: var(--text-orange-color);
+}
+
+.quantityControls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.quantityControls button {
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    border: 1px solid #ddd;
+    background: none;
+    cursor: pointer;
+}
+
+/* Option Groups */
+.optionGroup {
+    margin-top: 18px;
+    padding-top: 12px;
+    border-top: 6px solid #f5f5f5;
+}
+
+.groupHeader {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    font-weight: bold;
+}
+
+.groupName {
+    font-size: 15px;
+}
+
+.selectionHint {
+    font-size: 13px;
+    color: #666;
+}
+
+/* Option Row */
+.optionRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    border-bottom: 1px solid #eee;
+    cursor: pointer;
+}
+
+.optionInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.optionName {
+    font-size: 14px;
+}
+
+.optionPrice {
+    font-size: 13px;
+    color: var(--text-orange-color);
+    margin: 0;
+}
+
+/* Footer */
+.footer {
+    padding: 12px 18px 20px;
+    background: #fff;
+    border-top: 1px solid #e5e7eb;
+    flex-shrink: 0;
+}
+
+.addToCartButton {
+    padding: 14px;
+    width: 100%;
+    font-size: 16px;
+    font-weight: 700;
+    border: none;
+    border-radius: 12px;
+    color: var(--text-primary-color);
+    background: var(--gradient-button);
+    box-shadow: var(--shadow-inner);
+    text-shadow: var(--shadow-drop);
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.addToCartButton:hover {
+    opacity: 0.9;
+}

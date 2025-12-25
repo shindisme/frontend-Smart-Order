@@ -1,48 +1,58 @@
-import { LayoutList, Search, X } from 'lucide-react';
 import { useState } from 'react';
 import styles from './MenuTop.module.css';
+import { FiSearch } from "react-icons/fi";
+import { RxCross1 } from "react-icons/rx";
 
-function MenuTop() {
-    const [isSearching, setIsSearching] = useState(false);
+function MenuTop({ searchTerm, onSearchChange }) {
+    const [isSearchActive, setIsSearchActive] = useState(false);
+
+    const handleSearchToggle = () => {
+        setIsSearchActive(!isSearchActive);
+        if (isSearchActive) {
+            onSearchChange('');
+        }
+    };
+
+    const handleInputChange = (event) => {
+        onSearchChange(event.target.value);
+    };
 
     return (
-        <div className={styles.menuTopWrap}>
-            <div className={styles.menuTop}>
-
-                {/* Chưa tìm */}
-                {!isSearching && (
-                    <div className={styles.menuLeft}>
+        <div className={styles.menuTop}>
+            <div className={styles.menuTopContent}>
+                {/* Menu Title */}
+                {!isSearchActive && (
+                    <div className={styles.menuTitle}>
                         <span className={styles.title}>MENU</span>
-                        <span className={styles.iconWrap}>
-                            <LayoutList size={40} color='#00456f' strokeWidth={2} />
-                        </span>
                     </div>
                 )}
 
-                {/* Hiển ô tìm */}
-                {isSearching && (
-                    <div className={styles.searchInputWrap}>
+                {/* Search Input */}
+                {isSearchActive && (
+                    <div className={styles.searchContainer}>
                         <input
                             type="text"
-                            placeholder="Tìm kiếm..."
+                            placeholder="Tìm kiếm món..."
                             className={styles.searchInput}
+                            value={searchTerm}
+                            onChange={handleInputChange}
                             autoFocus
                         />
                     </div>
                 )}
 
-                {/* Trả về nút tìm */}
-                <div>
-                    {!isSearching
-                        ? (<button className={styles.searchBtn} onClick={() => setIsSearching(true)}>
-                            <Search size={40} color='#00456f' strokeWidth={3} />
-                        </button>)
-                        : (<button className={styles.searchBtn} onClick={() => setIsSearching(false)} >
-                            <X size={40} color='#00456f' strokeWidth={3} />
-                        </button>
-                        )
-                    }
-                </div>
+                {/* Search Toggle Button */}
+                <button
+                    className={styles.searchButton}
+                    onClick={handleSearchToggle}
+                    aria-label={isSearchActive ? "Đóng tìm kiếm" : "Mở tìm kiếm"}
+                >
+                    {!isSearchActive ? (
+                        <FiSearch size={40} color='#00456f' strokeWidth={3} />
+                    ) : (
+                        <RxCross1 size={40} color='#00456f' strokeWidth={1} />
+                    )}
+                </button>
             </div>
 
             <div className={styles.divider} />

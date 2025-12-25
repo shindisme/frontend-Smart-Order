@@ -1,110 +1,111 @@
-import { useState } from "react";
-import styles from "./Sidebar.module.css";
 import { NavLink } from "react-router-dom";
+import {
+  ProSidebar,
+  Menu,
+  MenuItem,
+  SubMenu,
+  SidebarHeader,
+  SidebarContent,
+} from "react-pro-sidebar";
+import "react-pro-sidebar/dist/css/styles.css";
+import { BiSolidCoupon, BiFoodMenu } from "react-icons/bi";
+import { FaConciergeBell, FaTag, FaUser } from "react-icons/fa";
+import { MdOutlineTableBar, MdDashboard } from "react-icons/md";
+import { TbInvoice, TbShoppingCartCog } from "react-icons/tb";
+import { CgOptions } from "react-icons/cg";
+import { LuUngroup } from "react-icons/lu";
 
-function Sidebar() {
+import logo from '../../../assets/logo.png';
 
-  const [collapsed, setCollapsed] = useState(false);
+import './SideBar.css'
+
+function SideBar({ setCollapsed, collapsed }) {
+  const sizeIcon = 24;
 
   return (
-    <div className={styles.sidebarWrap}>
-      <div className={styles.logo}>Smart Order</div>
-
-      <ul className={styles.nav}>
-        <li className={styles.navItem}>
-          <NavLink
-            to="dashboard"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
+    <>
+      <ProSidebar
+        collapsed={collapsed}
+        style={{
+          height: "100vh",
+        }}
+      >
+        <SidebarHeader>
+          <div
+            onClick={() => setCollapsed(!collapsed)}
+            style={{
+              padding: "14px 10px",
+              fontSize: 22,
+              fontWeight: 700,
+              color: "#fff",
+              textAlign: "center",
+              letterSpacing: '1px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+              cursor: 'pointer',
+            }}
           >
-            Dashboard
-          </NavLink>
-        </li>
+            <img src={logo} className="logoAdmin" />
+            Smart Order
+          </div>
+        </SidebarHeader>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="menu-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Quản lý menu
-            {/* Danh mục, Sản phẩm, nhóm tùy chọn, tùy chonmj */}
-          </NavLink>
-        </li>
+        <SidebarContent>
+          <Menu iconShape="circle">
+            <MenuItem icon={<MdDashboard />}>
+              Dashboard
+              <NavLink to="" />
+            </MenuItem>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="tables-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Quản lý bàn
-            {/* Danh mục, Sản phẩm, nhóm tùy chọn, tùy chonmj */}
-          </NavLink>
-        </li>
+            <SubMenu title="Quản lý menu" icon={<BiFoodMenu size={sizeIcon} />}>
+              <MenuItem icon={<FaConciergeBell size={18} />}>
+                Sản phẩm
+                <NavLink to="items-manage" />
+              </MenuItem>
+              <MenuItem icon={<FaTag size={18} />}>
+                Danh mục
+                <NavLink to="categories-manage" />
+              </MenuItem>
+              <MenuItem icon={<CgOptions size={18} />}>
+                Lựa chon
+                <NavLink to="options-manage" />
+              </MenuItem>
+              <MenuItem icon={<LuUngroup size={18} />}>
+                Nhóm lựa chọn
+                <NavLink to="option-groups-manage" />
+              </MenuItem>
+            </SubMenu>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="orders-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Đơn hàng
-            {/* Danh mục, Sản phẩm, nhóm tùy chọn, tùy chonmj */}
-          </NavLink>
-        </li>
+            <MenuItem icon={<MdOutlineTableBar size={sizeIcon} />}>
+              Quản lý bàn
+              <NavLink to="tables-manage" />
+            </MenuItem>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="invoices-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Hóa đơn
-            {/* Danh mục, Sản phẩm, nhóm tùy chọn, tùy chonmj */}
-          </NavLink>
-        </li>
+            <MenuItem icon={<FaUser size={sizeIcon} />}>
+              Quản lý nhân viên
+              <NavLink to="staffs-manage" />
+            </MenuItem>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="staffs-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Nhân viên
-          </NavLink>
-        </li>
+            <MenuItem icon={<TbShoppingCartCog size={sizeIcon} />}>
+              Đơn hàng
+              <NavLink to="orders-manage" />
+            </MenuItem>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="reports-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Báo cáo - Thống kê
-          </NavLink>
-        </li>
+            <MenuItem icon={<TbInvoice size={sizeIcon} />}>
+              Hóa đơn
+              <NavLink to="invoices-manage" />
+            </MenuItem>
 
-        <li className={styles.navItem}>
-          <NavLink
-            to="reports-manage"
-            className={({ isActive }) =>
-              isActive ? `${styles.navLink} ${styles.navLinkActive}` : styles.navLink
-            }
-          >
-            Khuyến mãi
-          </NavLink>
-        </li>
-      </ul>
-    </div>
+            <MenuItem icon={<BiSolidCoupon size={sizeIcon} />}>
+              Khuyến mãi
+              <NavLink to="coupons-manage" />
+            </MenuItem>
+          </Menu>
+        </SidebarContent>
+      </ProSidebar>
+    </>
   );
 }
 
-export default Sidebar;
+export default SideBar;

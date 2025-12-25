@@ -1,31 +1,53 @@
+import itemService from '../../../../services/itemService';
 import styles from './Item.module.css';
 
-function ItemCard({ name, price, size, image, handleAddToCart, setCartCount }) {
-    // console.log({ name, price, size, image });
+function ItemCard({ item, setSelectedItem, setShowOptionsModal }) {
+    const { name, price, size, img, item_id } = item;
+
+    const formatMoneyVND = (amount) => {
+        return new Intl.NumberFormat('vi-VN').format(amount);
+    };
+
+    const handleOpenOptionsModal = async () => {
+        try {
+            const itemDetail = await itemService.getById(item_id);
+            // console.log('Chi tiết món:', itemDetail);
+            setSelectedItem(itemDetail);
+            setShowOptionsModal(true);
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    };
+
     return (
-        <div className={styles.itemCardWrap}>
-            <div className={styles.imageWrap}>
-                <img src={image} alt={name} />
+        <div className={styles.itemCard}>
+            <div className={styles.imageContainer}>
+                <img
+                    src={`${import.meta.env.VITE_IMG_URL}${img}`}
+                    alt={name}
+                />
             </div>
-            <div className={styles.name}>{name}</div>
-            <div className={styles.content}>
-                <div className={styles.info}>
-                    <span className={styles.size}>{size}</span>
-                    <span className={styles.price}>{price}</span>
+
+            <div className={styles.itemName}>{name}</div>
+
+            <div className={styles.itemFooter}>
+                <div className={styles.itemInfo}>
+                    <span className={styles.itemSize}>{size || 'M - L'}</span>
+                    <span className={styles.itemPrice}>
+                        {formatMoneyVND(price)} đ
+                    </span>
                 </div>
 
                 <button
-                    className={styles.plusBtn}
-                    onClick={() => {
-                        setCartCount(prev => prev + 1);
-                        handleAddToCart({ name, price, size, image });
-                    }}
+                    className={styles.addButton}
+                    onClick={handleOpenOptionsModal}
+                    aria-label={`Thêm ${name} vào giỏ hàng`}
                 >
                     +
                 </button>
             </div>
-        </div >
+        </div>
     );
-};
+}
 
 export default ItemCard;

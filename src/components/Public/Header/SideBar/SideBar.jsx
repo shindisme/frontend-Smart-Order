@@ -17,28 +17,28 @@ function SideBar(setCollapsed) {
                             Menu
                         </NavLink>
                     </li>
-                    <li className={styles.item}>
-                        <NavLink
-                            to='best'
-                            className={({ isActive }) => isActive ? "tab active" : "tab"}
-                            onClick={closeSideBar}>
-                            Best Sellter
-                        </NavLink>
-                    </li>
-                    <li className={styles.item}>
+                    {/* <li className={styles.item}>
                         <NavLink
                             to='foods'
                             className={({ isActive }) => isActive ? "tab active" : "tab"}
                             onClick={closeSideBar}>
                             Đồ ăn
                         </NavLink>
+                    </li> */}
+                    <li className={styles.item}>
+                        <NavLink
+                            to='order'
+                            className={({ isActive }) => isActive ? "tab active" : "tab"}
+                            onClick={closeSideBar}>
+                            Đơn
+                        </NavLink>
                     </li>
                     <li className={styles.item}>
                         <NavLink
-                            to='drinks'
+                            to='info'
                             className={({ isActive }) => isActive ? "tab active" : "tab"}
                             onClick={closeSideBar}>
-                            Nước uống
+                            Thông tin quán
                         </NavLink>
                     </li>
                     <li className={styles.item}>

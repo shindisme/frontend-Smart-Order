@@ -1,0 +1,53 @@
+import { Table } from "react-bootstrap";
+import { FaEye } from "react-icons/fa";
+import { MdEdit } from "react-icons/md";
+import { ImCross } from "react-icons/im";
+import { ButtonGroup, Button } from "@mui/material";
+
+function TableLayout({ columns = [], data = [], onRead, onDelete, onUpdate }) {
+    const handleRead = (itemData) => onRead && onRead(itemData);
+    const handleUpdate = (itemData) => onUpdate && onUpdate(itemData);
+    const handleDelete = (itemData) => onDelete && onDelete(itemData);
+
+    return (
+        <Table striped bordered hover>
+            <thead>
+                <tr>
+                    {columns.map((column, index) => (
+                        <th key={index}>{column.name}</th>
+                    ))}
+                    <th>Chức năng</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                {data.map((rowData, rowIndex) => (
+                    <tr key={rowIndex}>
+                        {columns.map((column, colIndex) => (
+                            <td key={colIndex}>
+                                {rowData[column.key]}
+                            </td>
+                        ))}
+                        <td>
+                            <ButtonGroup size="large">
+                                <Button color="info" onClick={() => handleRead(rowData)} >
+                                    <FaEye />
+                                </Button>
+
+                                <Button color="secondary" onClick={() => handleUpdate(rowData)} >
+                                    <MdEdit />
+                                </Button>
+
+                                <Button color="error" onClick={() => handleDelete(rowData)}  >
+                                    <ImCross />
+                                </Button>
+                            </ButtonGroup>
+                        </td>
+                    </tr>
+                ))}
+            </tbody>
+        </Table>
+    );
+}
+
+export default TableLayout;
