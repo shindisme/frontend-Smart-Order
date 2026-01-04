@@ -11,7 +11,6 @@ function ItemCard({ item, setSelectedItem, setShowOptionsModal }) {
     const handleOpenOptionsModal = async () => {
         try {
             const itemDetail = await itemService.getById(item_id);
-            // console.log('Chi tiết món:', itemDetail);
             setSelectedItem(itemDetail);
             setShowOptionsModal(true);
         } catch (error) {

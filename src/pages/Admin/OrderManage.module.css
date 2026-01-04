@@ -1,0 +1,316 @@
+.container {
+    padding: 12px;
+    max-width: 1600px;
+    margin: 0 auto;
+    background: #f8fafc;
+    min-height: 100vh;
+}
+
+/* Header */
+.header {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.headerTop {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+}
+
+.headerActions {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.filterGroup {
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+}
+
+.filterBtn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #475569;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+.filterBtn.active {
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.filterCount {
+    background: #e2e8f0;
+    color: #475569;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.filterBtn.active .filterCount {
+    background: currentColor;
+    color: white;
+    opacity: 0.9;
+}
+
+.btnGroup {
+    display: flex;
+    gap: 8px;
+}
+
+.btnRefresh {
+    padding: 10px 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+}
+
+.btnAdd {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 18px;
+    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
+}
+
+/* Order Grid */
+.orderGrid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+}
+
+.emptyState {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: #94a3b8;
+    font-size: 14px;
+}
+
+/* Order Card */
+.orderCard {
+    background: white;
+    border-radius: 12px;
+    padding: 16px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.orderCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.orderHeader {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.orderIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.orderHeaderInfo {
+    flex: 1;
+}
+
+.orderCode {
+    font-size: 16px;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0 0 4px 0;
+}
+
+.orderTable {
+    font-size: 12px;
+    color: #64748b;
+    margin: 0;
+}
+
+.orderBody {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: #f8fafc;
+    border-radius: 8px;
+}
+
+.orderTime {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #64748b;
+}
+
+.orderTotal {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.totalAmount {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1e293b;
+}
+
+.orderNote {
+    font-size: 12px;
+    color: #64748b;
+    font-style: italic;
+    padding: 8px;
+    background: white;
+    border-radius: 6px;
+    border-left: 3px solid #e2e8f0;
+}
+
+.orderFooter {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 16px;
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.btnNext {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.subtitle {
+    font-size: 13px;
+    color: #64748b;
+    margin: 4px 0 0 0;
+    font-weight: 400;
+}
+
+.btnRefresh {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 16px;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btnRefresh:hover {
+    background: #f8fafc;
+    border-color: #cbd5e1;
+}
+
+.emptyState small {
+    font-size: 12px;
+    color: #94a3b8;
+    margin-top: 8px;
+}
+
+/* RESPONSIVE */
+@media (min-width: 640px) {
+    .orderGrid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (min-width: 768px) {
+    .container {
+        padding: 20px;
+    }
+
+    .headerTop {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .headerActions {
+        flex-direction: row;
+        align-items: center;
+    }
+
+    .orderGrid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .orderGrid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (min-width: 1280px) {
+    .orderGrid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}

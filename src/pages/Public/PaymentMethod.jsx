@@ -1,190 +1,118 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, NavLink } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
 import styles from './PaymentMethod.module.css';
-import { IoArrowUndo, IoChevronDown, IoChevronUp } from 'react-icons/io5';
-import { FaMoneyBillWave, FaCreditCard, FaWallet } from 'react-icons/fa';
+import { FaMoneyBillWave, FaWallet } from 'react-icons/fa';
+import { IoArrowUndoSharp } from "react-icons/io5";
 
 const PAYMENT_METHODS = [
     {
         id: 'cash',
         name: 'Tiền mặt (COD)',
         icon: <FaMoneyBillWave size={24} />,
-        description: 'Thanh toán khi bằng tiền mặt',
-        type: 'single'
+        description: 'Thanh toán bằng tiền mặt khi nhận hàng',
     },
     {
-        id: 'bank',
-        name: 'Ngân hàng',
-        icon: <FaCreditCard size={24} />,
-        description: 'Chuyển khoản qua ngân hàng',
-        type: 'single'
-    },
-    {
-        id: 'ewallet',
-        name: 'Ví điện tử',
+        id: 'vnpay',
+        name: 'VNPay',
         icon: <FaWallet size={24} />,
-        description: 'Thanh toán qua ví điện tử',
-        type: 'group',
-        children: [
-            {
-                id: 'momo',
-                name: 'Ví Momo',
-                icon: <FaWallet size={20} />,
-                description: 'Thanh toán qua ví Momo'
-            },
-            {
-                id: 'vnpay',
-                name: 'VNPay',
-                icon: <FaWallet size={20} />,
-                description: 'Thanh toán qua VNPay'
-            },
-        ]
+        description: 'Thanh toán qua cổng VNPay',
     }
 ];
 
 function PaymentMethod() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const tableId = searchParams.get('table');
+
     const [selectedMethod, setSelectedMethod] = useState(null);
-    const [expandedGroup, setExpandedGroup] = useState(null);
 
     useEffect(() => {
+        if (!tableId) {
+            toast.error('Không tìm thấy bàn');
+            navigate('/');
+            return;
+        }
+
+        // ✅ LOAD PHƯƠNG THỨC ĐÃ LƯU
         const saved = localStorage.getItem('selectedPaymentMethod');
         if (saved) {
-            const parsedMethod = JSON.parse(saved);
-            setSelectedMethod(parsedMethod);
-
-            if (parsedMethod.parentId === 'ewallet') {
-                setExpandedGroup('ewallet');
+            try {
+                const parsedMethod = JSON.parse(saved);
+                setSelectedMethod(parsedMethod);
+            } catch (err) {
+                console.error('Error parsing saved payment method:', err);
             }
         }
-    }, []);
+    }, [tableId, navigate]);
 
-    const handleSelectSingle = (method) => {
+    const handleBack = () => {
+        navigate(`/order?table=${tableId}`);
+    };
+
+    const handleSelect = (method) => {
         setSelectedMethod(method);
-        setExpandedGroup(null);
-    };
-
-    const handleToggleGroup = (groupId) => {
-        setExpandedGroup(expandedGroup === groupId ? null : groupId);
-    };
-
-    const handleSelectChild = (parent, child) => {
-        setSelectedMethod({
-            ...child,
-            parentId: parent.id,
-            parentName: parent.name
-        });
     };
 
     const handleConfirm = () => {
         if (!selectedMethod) {
-            alert('Vui lòng chọn phương thức thanh toán!');
+            toast.warning('Vui lòng chọn phương thức thanh toán!');
             return;
         }
 
         localStorage.setItem('selectedPaymentMethod', JSON.stringify(selectedMethod));
 
-        navigate('/order-confirm');
+        navigate(`/order?table=${tableId}`);
     };
 
+    if (!tableId) {
+        return null;
+    }
+
     return (
-        <>
-            {/* Header */}
+        <div className={styles.container}>
             <header className={styles.header}>
-                <NavLink to='/order-confirm' className={styles.backButton}>
-                    <IoArrowUndo size={24} />
-                </NavLink>
-                <h2 className={styles.title}>Phương thức thanh toán</h2>
+                <button className={styles.backBtn} onClick={handleBack}>
+                    <IoArrowUndoSharp size={24} />
+                </button>
+                <h3>Phương thức thanh toán</h3>
             </header>
 
-            {/* Main */}
             <main className={styles.main}>
-                {PAYMENT_METHODS.map(method => (
-                    <div key={method.id}>
-
+                <div className={styles.methodsGrid}>
+                    {PAYMENT_METHODS.map(method => (
                         <div
-                            className={`${styles.methodCard} ${method.type === 'single' && selectedMethod?.id === method.id ? styles.selected : ''
-                                } ${method.type === 'group' && expandedGroup === method.id
-                                    ? styles.expanded
-                                    : ''
+                            key={method.id}
+                            className={`${styles.methodCard} ${selectedMethod?.id === method.id ? styles.selected : ''
                                 }`}
-                            onClick={() => {
-                                if (method.type === 'single') {
-                                    handleSelectSingle(method);
-                                } else {
-                                    handleToggleGroup(method.id);
-                                }
-                            }}
+                            onClick={() => handleSelect(method)}
                         >
-                            {/* Icon */}
-                            <div className={styles.methodIcon}>
+                            <div
+                                className={styles.methodIcon}
+                                style={{ color: method.color }}
+                            >
                                 {method.icon}
                             </div>
 
-                            {/* Info */}
                             <div className={styles.methodInfo}>
                                 <h4>{method.name}</h4>
                                 <p>{method.description}</p>
                             </div>
 
-                            {/* Radio or Chevron */}
-                            {method.type === 'single' ? (
+                            <div className={styles.radioWrapper}>
                                 <input
                                     type="radio"
                                     checked={selectedMethod?.id === method.id}
                                     onChange={() => { }}
                                     aria-label={method.name}
                                 />
-                            ) : (
-                                <div className={styles.chevronIcon}>
-                                    {expandedGroup === method.id ? (
-                                        <IoChevronUp size={20} />
-                                    ) : (
-                                        <IoChevronDown size={20} />
-                                    )}
-                                </div>
-                            )}
-                        </div>
-
-                        {/* Children (Dropdown) */}
-                        {method.type === 'group' && expandedGroup === method.id && (
-                            <div className={styles.childrenContainer}>
-                                {method.children.map(child => (
-                                    <div
-                                        key={child.id}
-                                        className={`${styles.childCard} ${selectedMethod?.id === child.id
-                                            ? styles.selected
-                                            : ''
-                                            }`}
-                                        onClick={() => handleSelectChild(method, child)}
-                                    >
-                                        {/* Child Icon */}
-                                        <div className={styles.childIcon}>
-                                            {child.icon}
-                                        </div>
-
-                                        {/* Child Info */}
-                                        <div className={styles.childInfo}>
-                                            <h5>{child.name}</h5>
-                                            <p>{child.description}</p>
-                                        </div>
-
-                                        {/* Radio */}
-                                        <input
-                                            type="radio"
-                                            checked={selectedMethod?.id === child.id}
-                                            onChange={() => { }}
-                                            aria-label={child.name}
-                                        />
-                                    </div>
-                                ))}
                             </div>
-                        )}
-                    </div>
-                ))}
+                        </div>
+                    ))}
+                </div>
+
             </main>
 
-            {/* Footer */}
             <footer className={styles.footer}>
                 <button
                     className={styles.confirmButton}
@@ -194,7 +122,7 @@ function PaymentMethod() {
                     Xác nhận
                 </button>
             </footer>
-        </>
+        </div>
     );
 }
 

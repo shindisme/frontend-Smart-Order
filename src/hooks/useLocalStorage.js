@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 
 function useLocalStorage(key, initialValue) {
 
-    // Lấy giá trị từ localStorage khi component mount
     const [value, setValue] = useState(() => {
         try {
             const item = window.localStorage.getItem(key);
@@ -13,7 +12,6 @@ function useLocalStorage(key, initialValue) {
         }
     });
 
-    // save vào local khi value thay đổi
     useEffect(() => {
         try {
             window.localStorage.setItem(key, JSON.stringify(value));

@@ -28,6 +28,12 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
     };
 
     const handleAddToCart = () => {
+        // ✅ DEBUG: Xem selectedItem có cấu trúc gì
+        console.log('🔍 selectedItem:', selectedItem);
+        console.log('🆔 selectedItem.item_id:', selectedItem.item_id);
+        console.log('🆔 selectedItem.data?.item_id:', selectedItem.data?.item_id);
+        console.log('🆔 selectedItem.id:', selectedItem.id);
+
         const selectedOptions = [];
 
         for (let i = 0; i < optionGroups.length; i++) {
@@ -38,6 +44,7 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
 
                 if (option.selected) {
                     selectedOptions.push({
+                        optionId: option.optionId,
                         groupName: group.name,
                         optionName: option.name,
                         additionalPrice: option.additionalPrice
@@ -46,24 +53,35 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
             }
         }
 
+        // ✅ THÊM VALIDATION
+        const itemId = selectedItem.item_id || selectedItem.data?.item_id || selectedItem.id;
+
+        if (!itemId) {
+            console.error('❌ Không tìm thấy item_id!', selectedItem);
+            alert('Lỗi: Không tìm thấy ID món. Vui lòng thử lại!');
+            return;
+        }
+
         const cartItem = {
-            id: crypto.randomUUID(),
-            itemId: selectedItem.item_id,
+            id: itemId,  // ✅ Lấy từ nhiều nguồn
             name: selectedItem.name,
             basePrice: Number(selectedItem.price),
             quantity: quantity,
             imageUrl: selectedItem.img,
             selectedOptions: selectedOptions,
-            totalPrice: calculateTotalPrice()
+            totalPrice: calculateTotalPrice(),
+            note: ""
         };
+
+        console.log('✅ CartItem tạo ra:', cartItem);
 
         setCartItems((prevCart) => [...prevCart, cartItem]);
 
-        // Reset state
         setOptionGroups([]);
         setQuantity(1);
         setShowModal(false);
     };
+
 
     const handleToggleOption = (groupId, optionId, selectionType) => {
         setOptionGroups((prevGroups) => {
@@ -168,15 +186,12 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
 
     return (
         <>
-            {/* Overlay */}
             <div
                 className={`${styles.overlay} ${styles.show}`}
                 onClick={closeModal}
             />
 
-            {/* Modal */}
             <div className={`${styles.modal} ${styles.show}`}>
-                {/* Header */}
                 <div className={styles.header}>
                     <div className={styles.topBar}>
                         <h3>Thêm món mới</h3>
@@ -189,9 +204,7 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                     </div>
                 </div>
 
-                {/* Content */}
                 <div className={styles.content}>
-                    {/* Item Info */}
                     <div className={styles.itemInfo}>
                         <img
                             src={`${import.meta.env.VITE_IMG_URL}${selectedItem.img}`}
@@ -215,7 +228,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                         </div>
                     </div>
 
-                    {/* Options */}
                     {optionGroups.map((group) => (
                         <div key={group.groupId} className={styles.optionGroup}>
                             <div className={styles.groupHeader}>
@@ -269,7 +281,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                     ))}
                 </div>
 
-                {/* Footer */}
                 <div className={styles.footer}>
                     <button
                         className={styles.addToCartButton}

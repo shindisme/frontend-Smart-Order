@@ -2,12 +2,14 @@ import { Table } from "react-bootstrap";
 import { FaEye } from "react-icons/fa";
 import { MdEdit } from "react-icons/md";
 import { ImCross } from "react-icons/im";
+import { MdVpnKey } from "react-icons/md";
 import { ButtonGroup, Button } from "@mui/material";
 
-function TableLayout({ columns = [], data = [], onRead, onDelete, onUpdate }) {
+function TableLayout({ columns = [], data = [], onRead, onDelete, onUpdate, onResetPassword }) {
     const handleRead = (itemData) => onRead && onRead(itemData);
     const handleUpdate = (itemData) => onUpdate && onUpdate(itemData);
     const handleDelete = (itemData) => onDelete && onDelete(itemData);
+    const handleResetPassword = (itemData) => onResetPassword && onResetPassword(itemData);
 
     return (
         <Table striped bordered hover>
@@ -30,17 +32,27 @@ function TableLayout({ columns = [], data = [], onRead, onDelete, onUpdate }) {
                         ))}
                         <td>
                             <ButtonGroup size="large">
-                                <Button color="info" onClick={() => handleRead(rowData)} >
+                                <Button color="info" onClick={() => handleRead(rowData)}>
                                     <FaEye />
                                 </Button>
 
-                                <Button color="secondary" onClick={() => handleUpdate(rowData)} >
+                                <Button color="secondary" onClick={() => handleUpdate(rowData)}>
                                     <MdEdit />
                                 </Button>
 
-                                <Button color="error" onClick={() => handleDelete(rowData)}  >
+                                <Button color="error" onClick={() => handleDelete(rowData)}>
                                     <ImCross />
                                 </Button>
+
+                                {onResetPassword && rowData.fullData?.email && (
+                                    <Button
+                                        color="warning"
+                                        onClick={() => handleResetPassword(rowData)}
+                                        title="Cấp lại mật khẩu"
+                                    >
+                                        <MdVpnKey />
+                                    </Button>
+                                )}
                             </ButtonGroup>
                         </td>
                     </tr>

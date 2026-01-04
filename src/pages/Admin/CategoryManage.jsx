@@ -2,22 +2,68 @@ import { useEffect, useState } from "react";
 import categoryService from "../../services/categoryService";
 import TopBar from "../../components/Admin/Content/TopBar/TopBar";
 import TableLayout from "../../components/Admin/Content/TableLayout/TableLayout";
-import ModalCRUCategory from "../../components/Admin/Content/ModalCRU/ModalCRU.Category";
+import Pagination from "../../components/common/Pagination";
+import ModalCRUCategory from "../../components/Admin/Content/Modals/ModalCRU/ModalCRU.Category";
+import ModalConfirm from "../../components/Admin/Content/Modals/ModalConfirmDelete/ModalConfirm";
 import { toast } from "react-toastify";
-import ModalConfirm from "../../components/Admin/Content/ModalConfirmDelete/ModalConfirm";
+import { searchMatch } from "../../utils/removeTonesUtil";
+import { exportCategoryToExcel } from "../../utils/exportExcelUtil";
+import { useFetch } from "../../hooks/useFetch";
 
 function CategoryManage() {
+    // Hook fetch data
+    const { data: categories, loading, refetch } = useFetch(categoryService);
 
-    const [categories, setCategories] = useState([]);
+    // State
+    const [filteredCategories, setFilteredCategories] = useState([]);
+    const [paginatedCategories, setPaginatedCategories] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [categoryToDelete, setCategoryToDelete] = useState(null);
-
     const [showModal, setShowModal] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [mode, setMode] = useState("read");
 
-    // ! Set mode modal
+    // Filter
+    useEffect(() => {
+        let result = categories;
+
+        if (searchTerm) {
+            result = result.filter(cat => searchMatch(cat.name, searchTerm));
+        }
+
+        setFilteredCategories(result);
+        setCurrentPage(1);
+    }, [searchTerm, categories]);
+
+    // Paginate
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        setPaginatedCategories(filteredCategories.slice(startIndex, endIndex));
+    }, [filteredCategories, currentPage, itemsPerPage]);
+
+    // Handlers
+    const handleSearch = (value) => setSearchTerm(value);
+
+    const handleRefresh = () => {
+        setSearchTerm('');
+        setCurrentPage(1);
+        refetch();
+    };
+
+    const handleExportExcel = () => {
+        const result = exportCategoryToExcel(filteredCategories);
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
+        }
+    };
+
     const handleSetCreate = () => {
         setMode("create");
         setSelectedCategory(null);
@@ -36,66 +82,69 @@ function CategoryManage() {
         setShowModal(true);
     };
 
-    // hàm tạo or update
     const handleCU = async (data) => {
         try {
             if (mode === "create") {
-                await categoryService.insert(data);
+                const res = await categoryService.insert(data);
+                toast.success(res.message);
             } else if (mode === "update") {
-                await categoryService.update(selectedCategory.category_id, data);
+                const res = await categoryService.update(selectedCategory.category_id, data);
+                toast.success(res.message);
             }
 
-            const res = await categoryService.getAll();
-            setCategories(res.data);
-
+            refetch();
             setShowModal(false);
         } catch (error) {
             console.error(error);
-            toast.error("Có lỗi, vui lòng thử lại!");
+            toast.error(error.response?.data?.message || "Có lỗi xảy ra");
         }
     };
 
-    // ! hàm xóa
     const handleOpenDeleteModal = (row) => {
         setCategoryToDelete(row.fullData);
         setShowDeleteConfirm(true);
     };
+
     const handleConfirmDelete = async () => {
+        if (!categoryToDelete) return;
+
         try {
             const res = await categoryService.delete(categoryToDelete.category_id);
             toast.success(res.message);
-
-            const newList = await categoryService.getAll();
-            setCategories(newList.data);
+            refetch();
         } catch (err) {
-            console.log('Lỗi xóa: ', err);
-            toast.error('Lỗi khi xóa');
+            console.error('Lỗi xóa: ', err);
+            toast.error(err.response?.data?.message || 'Lỗi khi xóa');
         } finally {
-            showDeleteConfirm(false);
+            setShowDeleteConfirm(false);
             setCategoryToDelete(null);
         }
-    }
+    };
 
+    // Table
     const columns = [
         { name: "STT", key: "stt" },
         { name: "Tên danh mục", key: "name" },
     ];
 
-    const data = categories.map((cate, index) => ({
-        stt: index + 1,
+    const data = paginatedCategories.map((cate, index) => ({
+        stt: (currentPage - 1) * itemsPerPage + index + 1,
         name: cate.name,
         fullData: cate
     }));
 
-    useEffect(() => {
-        categoryService.getAll().then(res => setCategories(res.data));
-    }, []);
+    const totalPages = Math.ceil(filteredCategories.length / itemsPerPage);
+
+    if (loading) return <div>Đang tải...</div>;
 
     return (
         <>
-            <div className="mb-5">
-                <TopBar onAdd={handleSetCreate} />
-            </div>
+            <TopBar
+                onAdd={handleSetCreate}
+                onSearch={handleSearch}
+                onRefresh={handleRefresh}
+                onExportExcel={handleExportExcel}
+            />
 
             <h2 className="mb-4">Danh sách danh mục sản phẩm</h2>
 
@@ -107,6 +156,14 @@ function CategoryManage() {
                 onDelete={handleOpenDeleteModal}
             />
 
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+            />
+
             <ModalCRUCategory
                 show={showModal}
                 mode={mode}
@@ -114,9 +171,10 @@ function CategoryManage() {
                 onClose={() => setShowModal(false)}
                 onSubmit={handleCU}
             />
+
             <ModalConfirm
                 show={showDeleteConfirm}
-                title="Xác nhận xóa món"
+                title="Xác nhận xóa danh mục"
                 message={`Bạn có chắc muốn xóa "${categoryToDelete?.name}"?`}
                 onClose={() => setShowDeleteConfirm(false)}
                 onConfirm={handleConfirmDelete}

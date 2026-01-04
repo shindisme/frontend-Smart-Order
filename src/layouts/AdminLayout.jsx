@@ -3,7 +3,6 @@ import styles from "./AdminLayout.module.css";
 import Sidebar from "../components/Admin/SideBar/SideBar";
 import Header from "../components/Admin/Header/Header";
 import { Outlet } from "react-router-dom";
-import { Bounce, ToastContainer } from 'react-toastify';
 
 function AdminLayout() {
   const [collapsed, setCollapsed] = useState(false);
@@ -30,19 +29,7 @@ function AdminLayout() {
         </main>
 
       </div>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-        theme="colored"
-        transition={Bounce}
-      />
+
     </div>
   );
 }

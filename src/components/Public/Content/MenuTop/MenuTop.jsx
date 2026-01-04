@@ -20,14 +20,12 @@ function MenuTop({ searchTerm, onSearchChange }) {
     return (
         <div className={styles.menuTop}>
             <div className={styles.menuTopContent}>
-                {/* Menu Title */}
                 {!isSearchActive && (
                     <div className={styles.menuTitle}>
                         <span className={styles.title}>MENU</span>
                     </div>
                 )}
 
-                {/* Search Input */}
                 {isSearchActive && (
                     <div className={styles.searchContainer}>
                         <input
@@ -41,7 +39,6 @@ function MenuTop({ searchTerm, onSearchChange }) {
                     </div>
                 )}
 
-                {/* Search Toggle Button */}
                 <button
                     className={styles.searchButton}
                     onClick={handleSearchToggle}

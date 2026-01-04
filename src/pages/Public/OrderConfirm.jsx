@@ -1,62 +1,100 @@
 import { useEffect, useState } from 'react';
-import { NavLink, useNavigate } from 'react-router-dom';
+import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import invoiceService from '../../services/invoiceService';
+import orderService from '../../services/orderService';
 import styles from './OrderConfirm.module.css';
-import { IoArrowUndo } from 'react-icons/io5';
+import { IoArrowUndoSharp } from "react-icons/io5";
 import { RiCoupon2Line } from 'react-icons/ri';
-import { IoIosArrowForward } from 'react-icons/io';
+import { MdKeyboardArrowRight } from "react-icons/md";
 import CouponModal from '../../components/Public/Modals/CouponModal/CouponModal';
+import tableService from '../../services/tableService';
 
 function OrderConfirm() {
     const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
+    const tableId = searchParams.get('table');
 
     const [items, setItems] = useState([]);
     const [discount, setDiscount] = useState(0);
     const [couponDetail, setCouponDetail] = useState(null);
     const [showCouponModal, setShowCouponModal] = useState(false);
-    const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [oldInvoice, setOldInvoice] = useState(null);
 
-    const [isPaymentFlow, setIsPaymentFlow] = useState(false);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
+    const formatMoney = (num) => Number(num).toLocaleString('vi-VN') + 'đ';
 
-    const formatMoney = (num) =>
-        Number(num).toLocaleString('vi-VN') + 'đ';
+    if (!tableId) {
+        return (
+            <div style={{
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: 24,
+                background: "var(--bg-color)"
+            }}>
+                <div>
+                    <h2 style={{ marginBottom: 16, color: "var(--text-primary-color)" }}>
+                        Vui lòng quét mã QR tại bàn
+                    </h2>
+                    <button
+                        onClick={() => navigate('/')}
+                        style={{
+                            padding: "12px 24px",
+                            background: "var(--primary-color)",
+                            color: "white",
+                            border: "none",
+                            borderRadius: "8px",
+                            cursor: "pointer"
+                        }}
+                    >
+                        Quay lại
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     useEffect(() => {
-        try {
-            const savedCart = localStorage.getItem('guestCart');
+        localStorage.setItem('table_id', tableId);
 
-            if (savedCart) {
-                const parsedCart = JSON.parse(savedCart);
+        const cart = localStorage.getItem('guestCart');
+        if (cart) {
+            const parsedCart = JSON.parse(cart);
+            setItems(parsedCart);
+        } else {
+            toast.error('Giỏ hàng trống!');
+            navigate(`/?table=${tableId}`);
+        }
+    }, [navigate, tableId]);
 
-                if (parsedCart && parsedCart.length > 0) {
-                    setItems(parsedCart);
-                } else {
-                    alert('Giỏ hàng trống. Vui lòng chọn món!');
-                    navigate('/');
+    useEffect(() => {
+        const loadPendingInvoice = async () => {
+            try {
+                const res = await invoiceService.getPendingByTable(tableId);
+
+                if (res?.data) {
+                    setOldInvoice(res.data);
+                } else if (res) {
+                    setOldInvoice(res);
                 }
-            } else {
-                alert('Giỏ hàng trống. Vui lòng chọn món!');
-                navigate('/');
+            } catch (error) {
+                if (error.response?.status !== 404) {
+                    console.error('Error loading invoice:', error);
+                }
             }
-        } catch (error) {
-            console.error('Lỗi đọc giỏ hàng:', error);
-            alert('Có lỗi xảy ra. Vui lòng thử lại!');
-            navigate('/');
-        } finally {
-            setIsLoading(false);
-        }
-    }, [navigate]);
+        };
 
-    useEffect(() => {
-        const savedPaymentMethod = localStorage.getItem('selectedPaymentMethod');
-        if (savedPaymentMethod) {
-            setSelectedPaymentMethod(JSON.parse(savedPaymentMethod));
-            setIsPaymentFlow(true);
+        if (tableId) {
+            loadPendingInvoice();
         }
-    }, []);
+    }, [tableId]);
 
     const totalPrice = items.reduce((sum, item) => sum + item.totalPrice, 0);
     const finalPrice = totalPrice - discount;
+    const grandTotal = oldInvoice ? oldInvoice.final_total + finalPrice : finalPrice;
 
     const handleApplyCoupon = (couponData) => {
         setDiscount(couponData.discount);
@@ -64,166 +102,173 @@ function OrderConfirm() {
         setShowCouponModal(false);
     };
 
-    const handleTogglePaymentFlow = () => {
-        setIsPaymentFlow(!isPaymentFlow);
-    };
+    const handleSubmit = async () => {
+        if (isSubmitting) return;
+        setIsSubmitting(true);
 
-    const handleMainAction = async () => {
-        if (items.length === 0) {
-            alert('Giỏ hàng trống!');
-            return;
-        }
+        try {
+            // ✅ LOG TOÀN BỘ CART
+            console.log('📦 Items từ cart:', items);
 
-        // FLOW 1: CHỈ ĐẶT MÓN - GỬI ĐƠN VỀ ADMIN (pending, unpaid)
-        if (!isPaymentFlow) {
-            const confirmed = window.confirm(
-                'Xác nhận gửi đơn hàng? Bạn có thể tiếp tục mua và thanh toán sau.'
-            );
+            let invoice = JSON.parse(localStorage.getItem('currentInvoice') || 'null');
 
-            if (!confirmed) return;
-
-            try {
-                const orderData = {
-                    items: items,
-                    subtotal: totalPrice,
-                    discount: discount,
-                    finalTotal: finalPrice,
-                    coupon: couponDetail,
-                    orderDate: new Date().toISOString(),
-                    status: 'pending', // ✅ Đơn chờ xử lý
-                    paymentStatus: 'unpaid', // ✅ Chưa thanh toán
-                    paymentMethod: null
-                };
-
-                console.log('📦 Đơn hàng (gửi về admin - pending):', orderData);
-
-                // ✅ TODO: GỬI ORDER ĐẾN API ADMIN
-                // const response = await orderService.create(orderData);
-
-                await new Promise(resolve => setTimeout(resolve, 500));
-
-                // ✅ LƯU ORDER VÀO localStorage để hiển thị ở OrderStatus
-                localStorage.setItem('pendingOrder', JSON.stringify(orderData));
-
-                // ✅ XÓA CART sau khi gửi đơn thành công
-                localStorage.removeItem('guestCart');
-
-                alert('✅ Đơn hàng đã được gửi! Bạn có thể tiếp tục mua.');
-
-                // Chuyển đến trang OrderStatus
-                navigate('/order-status');
-            } catch (error) {
-                console.error('❌ Lỗi tạo đơn:', error);
-                alert('Có lỗi xảy ra. Vui lòng thử lại!');
-            }
-        }
-        // FLOW 2: ĐẶT MÓN + THANH TOÁN LUÔN
-        else {
-            if (!selectedPaymentMethod) {
-                alert('Vui lòng chọn phương thức thanh toán!');
-                return;
+            if (!invoice?.invoice_id && oldInvoice) {
+                invoice = oldInvoice;
             }
 
-            const confirmed = window.confirm(
-                `Xác nhận đặt ${items.length} món với tổng tiền ${formatMoney(finalPrice)}?\nPhương thức: ${selectedPaymentMethod.name}`
-            );
+            const newOrderTotal = totalPrice - discount;
 
-            if (!confirmed) return;
-
-            try {
-                const orderData = {
-                    items: items,
-                    subtotal: totalPrice,
+            if (!invoice?.invoice_id) {
+                const res = await invoiceService.insert({
+                    table_id: tableId,
+                    coupon_id: couponDetail?.id || null,
+                    total: totalPrice,
                     discount: discount,
-                    finalTotal: finalPrice,
-                    coupon: couponDetail,
-                    orderDate: new Date().toISOString(),
-                    status: 'confirmed', // Đơn đã xác nhận
-                    paymentStatus: 'pending',
-                    paymentMethod: selectedPaymentMethod
+                    final_total: newOrderTotal
+                });
+
+                invoice = {
+                    invoice_id: res.invoice_id,
+                    table_id: tableId,
+                    total: totalPrice,
+                    discount: discount,
+                    final_total: newOrderTotal,
+                    coupon_code: couponDetail?.code || null,
+                    status: 0
                 };
 
-                console.log('📦 Đơn hàng (có thanh toán):', orderData);
+                localStorage.setItem('currentInvoice', JSON.stringify(invoice));
+            }
 
-                // TODO: Call API to create order with payment
-                // const response = await orderService.createWithPayment(orderData);
+            const orderItems = items.map((item, index) => {
+                // ✅ LOG TỪNG ITEM
+                console.log(`📝 Processing item ${index}:`, item);
+                console.log(`   - item.id: ${item.id}`);
+                console.log(`   - item.itemId: ${item.itemId}`);
+                console.log(`   - item.item_id: ${item.item_id}`);
 
-                await new Promise(resolve => setTimeout(resolve, 500));
+                const itemId = item.id || item.itemId || item.item_id;
 
-                if (selectedPaymentMethod.id === 'cash') {
-                    localStorage.setItem('pendingOrder', JSON.stringify(orderData));
-                    localStorage.removeItem('guestCart');
-                    localStorage.removeItem('selectedPaymentMethod');
-
-                    alert('✅ Đặt hàng thành công! Thanh toán khi nhận hàng.');
-                    navigate('/order-status');
-                } else {
-                    localStorage.setItem('pendingOrder', JSON.stringify(orderData));
-
-                    alert(`Đang chuyển đến cổng thanh toán ${selectedPaymentMethod.name}...`);
-
-                    setTimeout(() => {
-                        localStorage.removeItem('guestCart');
-                        localStorage.removeItem('selectedPaymentMethod');
-
-                        alert('✅ Thanh toán thành công!');
-                        navigate('/order-status');
-                    }, 2000);
+                if (!itemId) {
+                    console.error('❌ Item thiếu ID:', item);
+                    throw new Error(`Món "${item.name}" thiếu thông tin ID`);
                 }
-            } catch (error) {
-                console.error('❌ Lỗi đặt hàng:', error);
-                alert('Có lỗi xảy ra khi đặt hàng. Vui lòng thử lại!');
+
+                // ✅ LOG OPTIONS
+                console.log(`   - selectedOptions:`, item.selectedOptions);
+
+                const validOptions = (item.selectedOptions || [])
+                    .map((opt, optIndex) => {
+                        console.log(`      Option ${optIndex}:`, opt);
+                        console.log(`        - optionId: ${opt.optionId}`);
+                        console.log(`        - option_id: ${opt.option_id}`);
+
+                        return {
+                            option_id: opt.optionId || opt.option_id
+                        };
+                    })
+                    .filter(opt => opt.option_id);
+
+                const orderItem = {
+                    item_id: itemId,
+                    quantity: item.quantity,
+                    total: item.totalPrice,
+                    note: item.note || null,
+                    options: validOptions
+                };
+
+                console.log(`✅ OrderItem ${index}:`, orderItem);
+                return orderItem;
+            });
+
+            console.log('🚀 Payload gửi lên backend:', {
+                invoice_id: invoice.invoice_id,
+                table_id: tableId,
+                user_id: null,
+                items: orderItems,
+                note: null
+            });
+
+            await orderService.create({
+                invoice_id: invoice.invoice_id,
+                table_id: tableId,
+                user_id: null,
+                items: orderItems,
+                note: null
+            });
+
+            // ✅ CHUYỂN TRẠNG THÁI BÀN SANG "ĐANG SỬ DỤNG" (state = 1)
+            try {
+                await tableService.update(tableId, { state: 1 });
+                console.log('✅ Đã chuyển trạng thái bàn sang Đang sử dụng');
+            } catch (tableError) {
+                console.error('⚠️ Lỗi cập nhật trạng thái bàn:', tableError);
+                // Không throw error vì order đã tạo thành công
             }
+
+            localStorage.removeItem('guestCart');
+            toast.success('Đơn hàng đã được gửi!');
+            navigate(`/order?table=${tableId}`);
+        } catch (error) {
+            console.error('❌ Error creating order:', error);
+            console.error('❌ Error response:', error.response?.data);
+
+            const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
+
+            if (errorMsg.includes('không còn tồn tại') || errorMsg.includes('không tồn tại')) {
+                toast.error('Một số món không còn tồn tại, vui lòng đặt lại!');
+                localStorage.removeItem('guestCart');
+                setTimeout(() => navigate(`/?table=${tableId}`), 2000);
+            } else {
+                toast.error(errorMsg || 'Có lỗi xảy ra!');
+            }
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
-    if (isLoading) {
-        return (
-            <div style={{
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
-                minHeight: '100vh'
-            }}>
-                <p>Đang tải...</p>
-            </div>
-        );
-    }
 
     return (
         <>
             <header className={styles.header}>
-                <NavLink to='/' className={styles.headerBackBtn}>
-                    <IoArrowUndo size={24} />
+                <NavLink to={`/?table=${tableId}`} className={styles.headerBackBtn}>
+                    <IoArrowUndoSharp size={24} />
                 </NavLink>
                 <h2 className={styles.headerTitle}>Xác nhận đơn</h2>
             </header>
 
             <main className={styles.main}>
+                {oldInvoice && (
+                    <section className={styles.cardOldOrder}>
+                        <div className={styles.oldOrderHeader}>
+                            <h4>Đơn hàng trước đó</h4>
+                            <span className={styles.oldOrderBadge}>Chưa thanh toán</span>
+                        </div>
+                        <div className={styles.oldOrderRow}>
+                            <span>Tổng đơn cũ:</span>
+                            <strong>{formatMoney(oldInvoice.final_total)}</strong>
+                        </div>
+                    </section>
+                )}
+
                 <section className={styles.cardOrder}>
-                    {items.map(item => (
-                        <div key={item.id} className={styles.orderRow}>
+                    {items.map((item, index) => (
+                        <div key={`${item.id}-${index}`} className={styles.orderRow}>
                             <img
                                 src={`${import.meta.env.VITE_IMG_URL}${item.imageUrl}`}
                                 alt={item.name}
                                 className={styles.orderImg}
                             />
-
                             <div className={styles.orderContent}>
                                 <div className={styles.orderTop}>
-                                    <span className={styles.orderQty}>
-                                        x{item.quantity}
-                                    </span>
+                                    <span className={styles.orderQty}>x{item.quantity}</span>
                                     <h6 className={styles.orderName}>{item.name}</h6>
-                                    <span className={styles.orderPrice}>
-                                        {formatMoney(item.totalPrice)}
-                                    </span>
+                                    <span className={styles.orderPrice}>{formatMoney(item.totalPrice)}</span>
                                 </div>
-
                                 <p className={styles.orderNote}>
-                                    {item.selectedOptions && item.selectedOptions.length > 0
+                                    {item.selectedOptions?.length > 0
                                         ? item.selectedOptions.map(opt => opt.optionName).join(', ')
-                                        : 'Không có ghi chú'
+                                        : 'Không có tùy chọn'
                                     }
                                 </p>
                             </div>
@@ -231,97 +276,61 @@ function OrderConfirm() {
                     ))}
                 </section>
 
-                <section
-                    className={styles.cardCoupon}
-                    onClick={() => setShowCouponModal(true)}
-                >
+                <section className={styles.cardCoupon} onClick={() => setShowCouponModal(true)}>
                     <div className={styles.couponRow}>
                         <div className={styles.couponLeft}>
-                            <span className={styles.couponIcon}>
-                                <RiCoupon2Line size={20} />
-                            </span>
-                            <span className={styles.couponText}>
-                                {couponDetail
-                                    ? `Voucher: ${couponDetail.code}`
-                                    : 'Thêm voucher'
-                                }
-                            </span>
+                            <RiCoupon2Line size={20} />
+                            <span>{couponDetail ? `Voucher: ${couponDetail.code}` : 'Thêm voucher'}</span>
                         </div>
-
-                        <IoIosArrowForward size={20} className={styles.couponArrow} />
+                        <MdKeyboardArrowRight size={20} />
                     </div>
                 </section>
 
                 <section className={styles.cardBill}>
                     <h3 className={styles.billTitle}>Chi tiết thanh toán</h3>
 
+                    {oldInvoice && (
+                        <div className={styles.billRow}>
+                            <span>Đơn trước:</span>
+                            <span>{formatMoney(oldInvoice.final_total)}</span>
+                        </div>
+                    )}
+
                     <div className={styles.billRow}>
-                        <span>Tổng giá món ({items.length} món)</span>
+                        <span>Đơn mới ({items.length} món):</span>
                         <span>{formatMoney(totalPrice)}</span>
                     </div>
 
-                    {couponDetail && discount > 0 && (
+                    {discount > 0 && (
                         <div className={styles.billRow}>
-                            <span>Mã khuyến mãi</span>
-                            <span className={styles.billDiscount}>
-                                -{formatMoney(discount)}
-                            </span>
+                            <span>Mã khuyến mãi:</span>
+                            <span className={styles.billDiscount}>-{formatMoney(discount)}</span>
                         </div>
                     )}
 
                     <div className={styles.billTotal}>
-                        <span>Tổng thanh toán</span>
-                        <span>{formatMoney(finalPrice)}</span>
+                        <span>Tổng thanh toán:</span>
+                        <span>{formatMoney(grandTotal)}</span>
                     </div>
                 </section>
-
-                <CouponModal
-                    show={showCouponModal}
-                    onClose={() => setShowCouponModal(false)}
-                    onApply={handleApplyCoupon}
-                />
             </main>
 
             <footer className={styles.footer}>
-                <div className={styles.payOptions}>
-                    <button
-                        className={`${styles.payBtnOutline} ${!isPaymentFlow ? styles.active : ''}`}
-                        onClick={() => setIsPaymentFlow(false)}
-                    >
-                        Chỉ đặt món
-                    </button>
-
-                    <button
-                        className={`${styles.payBtnBank} ${isPaymentFlow ? styles.active : ''}`}
-                        onClick={handleTogglePaymentFlow}
-                    >
-                        {selectedPaymentMethod ? selectedPaymentMethod.name : 'Chọn thanh toán'}
-                    </button>
-                </div>
-
-                <NavLink
-                    to='/payment-method'
-                    className={styles.payChangeBtn}
-                    onClick={() => {
-                        localStorage.setItem('orderConfirmState', JSON.stringify({
-                            discount,
-                            couponDetail
-                        }));
-                    }}
-                >
-                    Phương thức thanh toán
-                </NavLink>
-
                 <button
                     className={styles.paySubmit}
-                    onClick={handleMainAction}
+                    onClick={handleSubmit}
+                    disabled={isSubmitting}
                 >
-                    {isPaymentFlow
-                        ? `Đặt đơn – ${formatMoney(finalPrice)}`
-                        : 'Gửi đơn'
-                    }
+                    {isSubmitting ? 'Đang xử lý...' : `Gửi đơn - ${formatMoney(grandTotal)}`}
                 </button>
             </footer>
+
+            <CouponModal
+                show={showCouponModal}
+                onClose={() => setShowCouponModal(false)}
+                onApply={handleApplyCoupon}
+                orderTotal={totalPrice}
+            />
         </>
     );
 }

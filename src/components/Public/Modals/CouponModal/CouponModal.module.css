@@ -1,91 +1,230 @@
 .overlay {
     position: fixed;
     inset: 0;
-
-    background: rgba(0, 0, 0, 0.35);
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 999;
 }
 
 .modal {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    max-width: 430px;
-    margin: 0 auto;
-    background: #f4f7fe;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    z-index: 1000;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
     padding: 20px;
-    border-radius: 20px 20px 0 0;
-    animation: slideUp 0.25s ease;
+    border-bottom: 1px solid #e5e7eb;
 }
 
-@keyframes slideUp {
-    from {
-        transform: translateY(100%);
-    }
-
-    to {
-        transform: translateY(0);
-    }
+.header h3 {
+    margin: 0 0 4px 0;
+    font-size: 18px;
 }
 
-h3 {
-    margin-bottom: 16px;
-    font-weight: 700;
-}
-
-.inputRow {
-    display: flex;
-    gap: 10px;
-}
-
-.inputRow input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
-    background: #fff;
-}
-
-.checkBtn {
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    border: none;
-    background: var(--gradient-button);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
-}
-
-.resultBox {
-    margin-top: 18px;
-    min-height: 70px;
-    background: #fff;
-    border-radius: 14px;
-    padding: 14px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.12);
+.header small {
+    color: #6b7280;
     font-size: 14px;
 }
 
-.invalid {
-    color: red;
+.closeBtn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: #6b7280;
+    padding: 0;
+}
+
+.body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.inputGroup {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.inputGroup input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+}
+
+.checkBtn {
+    padding: 12px 20px;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.checkBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 .validBox {
-    color: green;
-    line-height: 1.4;
+    display: flex;
+    gap: 12px;
+    padding: 16px;
+    background: #d1fae5;
+    border: 1px solid #10b981;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    align-items: center;
+}
+
+.validBox strong {
+    display: block;
+    color: #047857;
+    margin-bottom: 4px;
+}
+
+.validBox p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+    color: #059669;
+}
+
+.validBox small {
+    color: #047857;
+    display: block;
+    margin-top: 4px;
+}
+
+.invalidBox {
+    padding: 16px;
+    background: #fee2e2;
+    border: 1px solid #ef4444;
+    border-radius: 8px;
+    color: #991b1b;
+    margin-bottom: 16px;
+}
+
+.divider {
+    text-align: center;
+    margin: 20px 0;
+    position: relative;
+}
+
+.divider::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: #e5e7eb;
+}
+
+.divider span {
+    position: relative;
+    background: white;
+    padding: 0 12px;
+    color: #6b7280;
+    font-size: 14px;
+}
+
+.couponList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.couponItem {
+    padding: 16px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.couponItem:hover:not(.disabled) {
+    border-color: #3b82f6;
+    background: #eff6ff;
+}
+
+.couponItem.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background: #f9fafb;
+}
+
+.couponLeft h5 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    color: #1f2937;
+    font-weight: 600;
+}
+
+.couponLeft p {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    color: #6b7280;
+}
+
+.couponLeft small {
+    font-size: 12px;
+    color: #9ca3af;
+}
+
+.badge {
+    padding: 4px 8px;
+    background: #fef3c7;
+    color: #d97706;
+    font-size: 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.empty {
+    text-align: center;
+    color: #9ca3af;
+    padding: 40px 0;
+}
+
+.footer {
+    padding: 20px;
+    border-top: 1px solid #e5e7eb;
 }
 
 .applyBtn {
     width: 100%;
-    margin-top: 20px;
     padding: 14px;
-    border-radius: 12px;
+    background: #10b981;
+    color: white;
     border: none;
-    font-weight: 600;
+    border-radius: 8px;
     font-size: 16px;
-    background: var(--gradient-button);
-    color: #333;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.applyBtn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }

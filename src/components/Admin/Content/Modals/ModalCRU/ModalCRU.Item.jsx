@@ -3,7 +3,7 @@ import Button from 'react-bootstrap/Button';
 import Modal from 'react-bootstrap/Modal';
 import { FcPlus } from "react-icons/fc";
 import { toast } from 'react-toastify';
-import MultiSelectGroup from '../../../common/MultiSelectGroup';
+import MultiSelectGroup from '../../../../common/MultiSelectGroup';
 
 function ModalCRUItem({ show, mode, data, categories = [], groups = [], onClose, onSubmit }) {
 

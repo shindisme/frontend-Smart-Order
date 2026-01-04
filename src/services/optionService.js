@@ -1,20 +1,20 @@
 import api from "../config/api";
 
 const optionService = {
-    getAll() {
-        return api.get('/options');
+    async getAll() {
+        return await api.get('/options');
     },
-    getById(id) {
-        return api.get(`/options/${id}`);
+    async getById(id) {
+        return await api.get(`/options/${id}`);
     },
-    insert(data) {
-        return api.post('/options', data);
+    async insert(data) {
+        return await api.post('/options', data);
     },
-    update(id, data) {
-        return api.put(`/options/${id}`, data);
+    async update(id, data) {
+        return await api.put(`/options/${id}`, data);
     },
-    delete(id) {
-        return api.delete(`/options/${id}`);
+    async delete(id) {
+        return await api.delete(`/options/${id}`);
     }
 };
 

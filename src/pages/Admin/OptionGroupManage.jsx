@@ -2,100 +2,149 @@ import { useEffect, useState } from "react";
 import { toast } from "react-toastify";
 import optionGroupService from "../../services/optionGroupService";
 import TableLayout from "../../components/Admin/Content/TableLayout/TableLayout";
-import ModalConfirm from "../../components/Admin/Content/ModalConfirmDelete/ModalConfirm";
-import ModalCRUOptionGroup from "../../components/Admin/Content/ModalCRU/ModalCRU.OptionGroup";
+import Pagination from "../../components/common/Pagination";
+import ModalConfirm from "../../components/Admin/Content/Modals/ModalConfirmDelete/ModalConfirm";
+import ModalCRUOptionGroup from "../../components/Admin/Content/Modals/ModalCRU/ModalCRU.OptionGroup";
 import TopBar from "../../components/Admin/Content/TopBar/TopBar";
+import { searchMatch } from "../../utils/removeTonesUtil";
+import { exportOptionGroupToExcel } from "../../utils/exportExcelUtil";
+import { useFetch } from "../../hooks/useFetch";
 
 function OptionGroupManage() {
-    const [optionGroups, setOptionGroups] = useState([]);
+    // Hook fetch data
+    const { data: optionGroups, loading, refetch } = useFetch(optionGroupService);
+
+    // State
+    const [filteredGroups, setFilteredGroups] = useState([]);
+    const [paginatedGroups, setPaginatedGroups] = useState([]);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const [itemsPerPage, setItemsPerPage] = useState(10);
 
     const [optionGroupToDelete, setOptionGroupToDelete] = useState(null);
     const [selectedOptionGroup, setSelectedOptionGroup] = useState(null);
-
     const [showModal, setShowModal] = useState(false);
     const [showModalConfirm, setShowModalConfirm] = useState(false);
     const [mode, setMode] = useState('read');
 
-    // ! set mode modal
+    // Filter
+    useEffect(() => {
+        let result = optionGroups;
+
+        if (searchTerm) {
+            result = result.filter(group => searchMatch(group.name, searchTerm));
+        }
+
+        setFilteredGroups(result);
+        setCurrentPage(1);
+    }, [searchTerm, optionGroups]);
+
+    // Paginate
+    useEffect(() => {
+        const startIndex = (currentPage - 1) * itemsPerPage;
+        const endIndex = startIndex + itemsPerPage;
+        setPaginatedGroups(filteredGroups.slice(startIndex, endIndex));
+    }, [filteredGroups, currentPage, itemsPerPage]);
+
+    // Handlers
+    const handleSearch = (value) => setSearchTerm(value);
+
+    const handleRefresh = () => {
+        setSearchTerm('');
+        setCurrentPage(1);
+        refetch();
+    };
+
+    const handleExportExcel = () => {
+        const result = exportOptionGroupToExcel(filteredGroups);
+        if (result.success) {
+            toast.success(result.message);
+        } else {
+            toast.error(result.message);
+        }
+    };
+
     const handleSetRead = (row) => {
         setMode('read');
         setSelectedOptionGroup(row.fullData);
         setShowModal(true);
-    }
+    };
+
     const handleSetCreate = () => {
         setMode('create');
         setSelectedOptionGroup(null);
         setShowModal(true);
-    }
+    };
+
     const handleSetUpdate = (row) => {
         setMode('update');
         setSelectedOptionGroup(row.fullData);
         setShowModal(true);
-    }
+    };
 
-    // ! hàm tạo or update
     const handleCU = async (data) => {
         try {
             if (mode === 'create') {
-                await optionGroupService.insert(data);
-            }
-            else if (mode === 'update') {
-                await optionGroupService.update(selectedOptionGroup.group_id, data);
+                const res = await optionGroupService.insert(data);
+                toast.success(res.message);
+            } else if (mode === 'update') {
+                const res = await optionGroupService.update(selectedOptionGroup.group_id, data);
+                toast.success(res.message);
             }
 
-            const res = await optionGroupService.getAll();
-            setOptionGroups(res.data);
-
+            refetch();
             setShowModal(false);
         } catch (error) {
-            console.log(error);
-            toast.error("Có lỗi, vui lòng thử lại!");
+            console.error(error);
+            toast.error(error.response?.data?.message || "Có lỗi, vui lòng thử lại!");
         }
-    }
+    };
 
-    // ! hàm xóa
     const handleDelete = (row) => {
         setOptionGroupToDelete(row.fullData);
         setShowModalConfirm(true);
     };
+
     const handleConfirmDelete = async () => {
+        if (!optionGroupToDelete) return;
+
         try {
             const res = await optionGroupService.delete(optionGroupToDelete.group_id);
             toast.success(res.message);
-
-            const newList = await optionGroupService.getAll();
-            setOptionGroups(newList.data);
+            refetch();
         } catch (err) {
-            console.log('Lỗi xóa: ', err);
-            toast.error('Lỗi khi xóa');
+            console.error('Lỗi xóa: ', err);
+            toast.error(err.response?.data?.message || 'Lỗi khi xóa');
         } finally {
             setShowModalConfirm(false);
             setOptionGroupToDelete(null);
         }
-    }
+    };
 
+    // Table
     const columns = [
         { name: "STT", key: 'stt' },
         { name: "Tên nhóm tùy chọn", key: 'name' }
     ];
 
-    const data = optionGroups.map((oGroup, index) => ({
-        stt: index + 1,
+    const data = paginatedGroups.map((oGroup, index) => ({
+        stt: (currentPage - 1) * itemsPerPage + index + 1,
         name: oGroup.name,
         fullData: oGroup
     }));
 
-    useEffect(() => {
-        optionGroupService
-            .getAll()
-            .then(res => setOptionGroups(res.data));
-    }, []);
+    const totalPages = Math.ceil(filteredGroups.length / itemsPerPage);
+
+    if (loading) return <div>Đang tải...</div>;
 
     return (
         <>
-            <div className="mb-5">
-                <TopBar onAdd={handleSetCreate} />
-            </div>
+            <TopBar
+                onAdd={handleSetCreate}
+                onSearch={handleSearch}
+                onRefresh={handleRefresh}
+                onExportExcel={handleExportExcel}
+            />
 
             <h2 className="mb-4">Danh sách nhóm tùy chọn</h2>
 
@@ -107,6 +156,14 @@ function OptionGroupManage() {
                 onDelete={handleDelete}
             />
 
+            <Pagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+                itemsPerPage={itemsPerPage}
+                onItemsPerPageChange={setItemsPerPage}
+            />
+
             <ModalCRUOptionGroup
                 show={showModal}
                 mode={mode}
@@ -114,15 +171,16 @@ function OptionGroupManage() {
                 onClose={() => setShowModal(false)}
                 onSubmit={handleCU}
             />
+
             <ModalConfirm
                 show={showModalConfirm}
-                title="Xác nhận xóa món"
+                title="Xác nhận xóa nhóm tùy chọn"
                 message={`Bạn có chắc muốn xóa "${optionGroupToDelete?.name}"?`}
                 onClose={() => setShowModalConfirm(false)}
                 onConfirm={handleConfirmDelete}
             />
         </>
     );
-};
+}
 
 export default OptionGroupManage;

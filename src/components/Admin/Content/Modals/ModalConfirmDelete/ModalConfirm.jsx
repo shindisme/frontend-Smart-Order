@@ -1,6 +1,6 @@
 import { Modal, Button } from "react-bootstrap";
 
-function ModalConfirm({ show, title, message, onClose, onConfirm, loading }) {
+function ModalConfirm({ show, title, message, onClose, onConfirm }) {
     return (
         <Modal show={show} onHide={onClose} centered backdrop="static">
             <Modal.Header closeButton>
@@ -12,11 +12,11 @@ function ModalConfirm({ show, title, message, onClose, onConfirm, loading }) {
             </Modal.Body>
 
             <Modal.Footer>
-                <Button variant="secondary" onClick={onClose} disabled={loading}>
+                <Button variant="secondary" onClick={onClose}>
                     Hủy
                 </Button>
-                <Button variant="danger" onClick={onConfirm} disabled={loading}>
-                    {loading ? "Đang xóa..." : "Xóa"}
+                <Button variant="danger" onClick={onConfirm}>
+                    Xác nhận
                 </Button>
             </Modal.Footer>
         </Modal>

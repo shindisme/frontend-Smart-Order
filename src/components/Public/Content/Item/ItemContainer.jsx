@@ -2,33 +2,23 @@ import { useEffect, useState } from 'react';
 import styles from './Item.module.css';
 import ItemCard from './ItemCard';
 import itemService from '../../../../services/itemService';
+import { searchMatch } from '../../../../utils/removeTonesUtil';
 
 function ItemContainer({ activeCategoryId, searchTerm, setSelectedItem, setShowOptionsModal }) {
     const [items, setItems] = useState([]);
 
-    // filter theo cate tab
+    // lọc theo cate
     const itemsByCategory = activeCategoryId === '0'
         ? items
         : items.filter(item => item.category_id === activeCategoryId);
 
-    // filter theo search
+    // lọc theo search
     const filteredItems = searchTerm
         ? itemsByCategory.filter(item =>
-            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+            searchMatch(item.name, searchTerm)
         )
         : itemsByCategory;
 
-
-    // const removeDiacritics = (str) => {
-    //     return str
-    //         .normalize('NFD')
-    //         .replace(/[\u0300-\u036f]/g, '')
-    //         .replace(/đ/g, 'd')
-    //         .replace(/Đ/g, 'D')
-    //         .toLowerCase(
-
-    //     );
-    // };
     useEffect(() => {
         const fetchItems = async () => {
             try {

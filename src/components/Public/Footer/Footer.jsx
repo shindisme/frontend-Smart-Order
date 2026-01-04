@@ -1,8 +1,11 @@
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import styles from './Footer.module.css';
 import { MdOutlineShoppingCart } from "react-icons/md";
 
 function Footer({ cartCount, showCartModal, setShowCartModal }) {
+    const [searchParams] = useSearchParams();
+    const tableId = searchParams.get('table');
+
     const hasCartItems = cartCount > 0;
 
     const handleToggleCart = () => {
@@ -12,7 +15,6 @@ function Footer({ cartCount, showCartModal, setShowCartModal }) {
     return (
         <div className={`${styles.footer} ${hasCartItems ? styles.show : ''}`}>
             <div className={styles.content}>
-                {/* Cart Button */}
                 <button
                     className={styles.cartButton}
                     onClick={handleToggleCart}
@@ -22,9 +24,8 @@ function Footer({ cartCount, showCartModal, setShowCartModal }) {
                     <span className={styles.cartBadge}>{cartCount}</span>
                 </button>
 
-                {/* Confirm Button */}
                 <Link
-                    to='/order-confirm'
+                    to={`/order-confirm?table=${tableId}`}
                     className={styles.confirmButton}
                 >
                     Xác Nhận

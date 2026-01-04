@@ -2,24 +2,19 @@ import api from "../config/api";
 
 const optionGroupService = {
     async getAll() {
-        const { data } = await api.get('/option-groups');
-        return data;
+        return await api.get('/option-groups');
     },
     async getById(id) {
-        const { data } = await api.get(`/option-groups/${id}`);
-        return data;
+        return await api.get(`/option-groups/${id}`);
     },
     async insert(data) {
-        const { data: res } = await api.post('/option-groups', data);
-        return res;
+        return await api.post('/option-groups', data);
     },
     async update(id, data) {
-        const { data: res } = await api.put(`/option-groups/${id}`, data);
-        return res;
+        return await api.put(`/option-groups/${id}`, data);
     },
     async delete(id) {
-        const { data: res } = await api.delete(`/option-groups/${id}`);
-        return res;
+        return await api.delete(`/option-groups/${id}`);
     }
 };
 
