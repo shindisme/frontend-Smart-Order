@@ -102,7 +102,7 @@ function CouponManage() {
             {coupon.type === 0 ? "Giảm %" : "Giảm tiền"}
         </Badge>,
         value: coupon.type === 0
-            ? `${coupon.value}%${coupon.max_discount ? ` (max ${new Intl.NumberFormat('vi-VN').format(coupon.max_discount)}đ)` : ''}`
+            ? `${coupon.value}%${coupon.max_discount ? ` (tối đa ${new Intl.NumberFormat('vi-VN').format(coupon.max_discount)}đ)` : ''}`
             : `${new Intl.NumberFormat('vi-VN').format(coupon.value)}đ`,
         validity: (
             <div style={{ fontSize: '13px' }}>

@@ -1,41 +1,265 @@
-@keyframes pulse {
-
-    0%,
-    100% {
-        opacity: 1;
-    }
-
-    50% {
-        opacity: 0.7;
-    }
+.dashboard {
+    padding: 24px;
+    background: #f8f9fa;
+    min-height: 100vh;
 }
 
-.pulse {
-    animation: pulse 2s infinite;
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
 }
 
-.card {
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+.title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
 }
 
-.card:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1) !important;
+.subtitle {
+    font-size: 14px;
+    color: #6b7280;
+    margin: 4px 0 0;
 }
 
-/* Table styles */
-.table tbody tr {
-    transition: background-color 0.2s ease;
+.loadingContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 400px;
 }
 
-.table tbody tr:hover {
-    background-color: #f8f9fa;
+.statCard {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+    height: 100%;
 }
 
-code {
-    background: #f1f3f5;
-    padding: 2px 6px;
-    border-radius: 4px;
+.statCard:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.statCard .card-body {
+    padding: 20px;
+    display: flex;
+    gap: 16px;
+}
+
+.statIcon {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.statContent {
+    flex: 1;
+    min-width: 0;
+}
+
+.statLabel {
     font-size: 13px;
-    color: #495057;
+    color: #6b7280;
+    margin: 0 0 4px;
+    font-weight: 500;
+}
+
+.statValue {
+    font-size: 24px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 4px;
+}
+
+.statChange {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.statChange.increase {
+    color: #16a34a;
+}
+
+.statChange.decrease {
+    color: #dc2626;
+}
+
+.chartCard {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chartCard .card-header {
+    background: white;
+    border: none;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.chartCard .card-body {
+    padding: 20px;
+}
+
+.tableCard {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    height: 100%;
+}
+
+.tableCard .card-header {
+    background: white;
+    border: none;
+    padding: 20px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.cardHeader {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.cardHeaderIcon {
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    background: #dbeafe;
+    color: #2563eb;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.cardTitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1f2937;
+    margin: 0;
+}
+
+.tableContainer {
+    max-height: 450px;
+    overflow-y: auto;
+}
+
+.customTable {
+    width: 100%;
+    margin: 0;
+}
+
+.customTable tbody tr {
+    border-bottom: 1px solid #f3f4f6;
+    transition: background 0.2s ease;
+}
+
+.customTable tbody tr:hover {
+    background: #f9fafb;
+}
+
+.customTable tbody tr:last-child {
+    border-bottom: none;
+}
+
+.customTable td {
+    padding: 16px 20px;
+    vertical-align: middle;
+}
+
+.orderInfo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.orderAvatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: #f3f4f6;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #6b7280;
+    flex-shrink: 0;
+}
+
+.orderName {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.orderTime {
+    font-size: 12px;
+    color: #9ca3af;
+    margin-top: 2px;
+}
+
+.orderAmount {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 4px;
+}
+
+.statusBadge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    border-radius: 6px;
+}
+
+.chartTooltip {
+    background: white;
+    padding: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e5e7eb;
+}
+
+.tooltipLabel {
+    font-size: 12px;
+    color: #6b7280;
+    margin: 0 0 4px;
+}
+
+.tooltipValue {
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0;
+}
+
+@media (max-width: 768px) {
+    .dashboard {
+        padding: 16px;
+    }
+
+    .title {
+        font-size: 22px;
+    }
+
+    .statValue {
+        font-size: 20px;
+    }
+
+    .customTable td {
+        padding: 12px 16px;
+    }
 }

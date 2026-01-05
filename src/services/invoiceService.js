@@ -11,37 +11,8 @@ const invoiceService = {
         return res.data;
     },
 
-    getByTableId: async (table_id) => {
-        const res = await api.get('/invoices', {
-            params: { table_id }
-        });
-        return res.data;
-    },
-
-    getPendingOrders: async (table_id) => {
-        const res = await api.get(`/invoices/pending-orders/${table_id}`);
-        return res.data;
-    },
-
-    getPendingByTable: async (table_id) => {
-        const res = await api.get('/invoices/pending', {
-            params: { table_id }
-        });
-        return res.data;
-    },
-
-    insert: async (data) => {
-        const res = await api.post('/invoices', data);
-        return res.data;
-    },
-
-    pay: async (id) => {
-        const res = await api.patch(`/invoices/${id}/pay`);
-        return res.data;
-    },
-
-    delete: async (id) => {
-        const res = await api.delete(`/invoices/${id}`);
+    pay: async (id, coupon_code = null) => {
+        const res = await api.patch(`/invoices/${id}/pay`, { coupon_code });
         return res.data;
     }
 };

@@ -22,8 +22,8 @@ function OrderTracking() {
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
 
-    const [orders, setOrders] = useState([]);
-    const [invoice, setInvoice] = useState(null);
+    const [pendingInvoice, setPendingInvoice] = useState(null);
+    const [paidInvoices, setPaidInvoices] = useState([]);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [loading, setLoading] = useState(true);
 
@@ -32,53 +32,50 @@ function OrderTracking() {
             navigate('/');
             return;
         }
-        loadOrders();
+        loadData();
     }, [tableId]);
 
-    const loadOrders = async () => {
+    const loadData = async () => {
         try {
             setLoading(true);
 
-            const ordersRes = await orderService.getByTableId(tableId);
+            const invoicesRes = await invoiceService.getAll();
 
-            if (ordersRes?.data) {
-                const ordersWithDetails = await Promise.all(
-                    ordersRes.data.map(async (order) => {
-                        try {
-                            const detailRes = await orderService.getById(order.order_id);
-                            return detailRes?.data || order;
-                        } catch (err) {
-                            return order;
-                        }
-                    })
-                );
+            if (invoicesRes?.data) {
+                const tableInvoices = invoicesRes.data.filter(inv => String(inv.table_id) === String(tableId));
 
-                setOrders(ordersWithDetails);
-            }
+                const pending = tableInvoices.find(inv => inv.status === 0);
+                const paid = tableInvoices.filter(inv => inv.status === 1);
 
-            try {
-                const pendingInvoiceRes = await invoiceService.getPendingByTable(tableId);
-                if (pendingInvoiceRes?.data) {
-                    setInvoice(pendingInvoiceRes.data);
-                }
-            } catch (err) {
-                if (err.response?.status === 404) {
+                if (pending) {
                     try {
-                        const allInvoicesRes = await invoiceService.getByTableId(tableId);
-                        if (allInvoicesRes?.data && allInvoicesRes.data.length > 0) {
-                            const latestInvoice = allInvoicesRes.data[0];
-                            setInvoice(latestInvoice);
-                        }
-                    } catch (invoiceErr) {
-                        if (invoiceErr.response?.status !== 404) {
-                            toast.error('Lỗi tải hóa đơn');
-                        }
+                        const detailRes = await invoiceService.getById(pending.invoice_id);
+                        setPendingInvoice(detailRes?.data || pending);
+                    } catch (err) {
+                        console.error('Error loading pending invoice:', err);
+                        setPendingInvoice(pending);
                     }
+                }
+
+                if (paid.length > 0) {
+                    const paidWithDetails = await Promise.all(
+                        paid.map(async (inv) => {
+                            try {
+                                const detailRes = await invoiceService.getById(inv.invoice_id);
+                                return detailRes?.data || inv;
+                            } catch (err) {
+                                console.error('Error loading paid invoice:', err);
+                                return inv;
+                            }
+                        })
+                    );
+                    setPaidInvoices(paidWithDetails);
                 }
             }
         } catch (error) {
+            console.error('Error loading data:', error);
             if (error.response?.status !== 404) {
-                toast.error('Lỗi tải đơn hàng');
+                toast.error('Lỗi tải dữ liệu');
             }
         } finally {
             setLoading(false);
@@ -90,15 +87,25 @@ function OrderTracking() {
     };
 
     const handleGoToPayment = () => {
+        if (!pendingInvoice) {
+            toast.warning('Không có hóa đơn cần thanh toán');
+            return;
+        }
         navigate(`/payment?table=${tableId}`);
     };
 
     const handleCancelConfirm = async () => {
+        if (!pendingInvoice?.orders) {
+            toast.warning('Không có đơn hàng nào để hủy!');
+            setShowCancelModal(false);
+            return;
+        }
+
         try {
-            const pendingOrders = orders.filter(o => o.state === 0);
+            const pendingOrders = pendingInvoice.orders.filter(o => o.state === 0);
 
             if (pendingOrders.length === 0) {
-                toast.warning('Không có đơn hàng nào để hủy!');
+                toast.warning('Không có đơn hàng chờ xử lý để hủy!');
                 setShowCancelModal(false);
                 return;
             }
@@ -107,73 +114,116 @@ function OrderTracking() {
                 pendingOrders.map(order => orderService.delete(order.order_id))
             );
 
-            const remainingOrders = orders.filter(o => o.state !== 0);
-
-            if (remainingOrders.length === 0 && invoice?.invoice_id && invoice.status === 0) {
-                try {
-                    await invoiceService.delete(invoice.invoice_id);
-                } catch (invoiceError) {
-                    toast.warning('Đơn hàng đã hủy nhưng hóa đơn chưa xóa được. Vui lòng liên hệ nhân viên!');
-                }
-            }
-
-            localStorage.removeItem('currentInvoice');
-            localStorage.removeItem('guestCart');
-            localStorage.removeItem('selectedPaymentMethod');
-
             toast.success('Đã hủy đơn hàng chờ xử lý');
             setShowCancelModal(false);
-
-            if (remainingOrders.length === 0) {
-                navigate(`/?table=${tableId}`);
-            } else {
-                loadOrders();
-            }
+            loadData();
         } catch (error) {
-            toast.error(error.response?.data?.message || error.message || 'Lỗi khi hủy đơn');
+            toast.error(error.response?.data?.message || 'Lỗi khi hủy đơn');
         }
     };
 
     const getOrderState = (state) => {
         switch (state) {
-            case 0: return {
-                text: 'Chờ xử lý',
-                color: '#f59e0b',
-                icon: MdHourglassEmpty
-            };
-            case 1: return {
-                text: 'Đang làm',
-                color: '#3b82f6',
-                icon: MdRestaurant
-            };
-            case 2: return {
-                text: 'Hoàn thành',
-                color: '#10b981',
-                icon: MdCheckCircle
-            };
-            default: return {
-                text: 'Không xác định',
-                color: '#6b7280',
-                icon: MdAccessTime
-            };
+            case 0: return { text: 'Chờ xử lý', color: '#f59e0b', icon: MdHourglassEmpty };
+            case 1: return { text: 'Đang làm', color: '#3b82f6', icon: MdRestaurant };
+            case 2: return { text: 'Hoàn thành', color: '#10b981', icon: MdCheckCircle };
+            default: return { text: 'Không xác định', color: '#6b7280', icon: MdAccessTime };
         }
     };
 
     const formatMoney = (num) => num?.toLocaleString('vi-VN') + 'đ';
-    const formatTime = (date) => new Date(date).toLocaleTimeString('vi-VN', {
-        hour: '2-digit',
-        minute: '2-digit'
-    });
+    const formatTime = (date) => new Date(date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
+    const formatDate = (date) => new Date(date).toLocaleDateString('vi-VN');
 
-    const calculateTotal = () => {
-        return orders.reduce((sum, order) => {
-            const orderTotal = order.items?.reduce(
-                (itemSum, item) => itemSum + Number(item.total),
-                0
-            ) || 0;
-            return sum + orderTotal;
-        }, 0);
-    };
+    const renderInvoiceDetail = (invoice, isPaid = false) => (
+        <>
+            <div className={styles.infoCard}>
+                <div className={styles.infoRow}>
+                    <span><MdTableRestaurant size={20} /> Bàn:</span>
+                    <strong>{invoice.table_name}</strong>
+                </div>
+                <div className={styles.infoRow}>
+                    <span><MdReceiptLong /> Mã HĐ:</span>
+                    <strong>{invoice.invoice_id.slice(0, 13).toUpperCase()}</strong>
+                </div>
+                {isPaid && invoice.paid_at && (
+                    <div className={styles.infoRow}>
+                        <span>Thanh toán lúc:</span>
+                        <strong>{new Date(invoice.paid_at).toLocaleString('vi-VN')}</strong>
+                    </div>
+                )}
+            </div>
+
+            <div className={styles.ordersList}>
+                {invoice.orders && invoice.orders.length > 0 ? (
+                    invoice.orders.map((order, idx) => {
+                        const stateInfo = getOrderState(order.state);
+                        const StateIcon = stateInfo.icon;
+
+                        return (
+                            <div key={order.order_id} className={styles.orderCard}>
+                                <div className={styles.orderHeader}>
+                                    <div>
+                                        <span className={styles.orderNumber}>Lần {idx + 1}</span>
+                                        <span className={styles.orderTime}>{formatTime(order.created_at)}</span>
+                                    </div>
+                                    <div className={styles.orderState} style={{ color: stateInfo.color }}>
+                                        <StateIcon size={18} />
+                                        <span>{stateInfo.text}</span>
+                                    </div>
+                                </div>
+
+                                <div className={styles.items}>
+                                    {order.items?.map(item => (
+                                        <div key={item.order_detail_id} className={styles.item}>
+                                            <img
+                                                src={`${import.meta.env.VITE_IMG_URL}${item.img}`}
+                                                alt={item.name}
+                                                className={styles.itemImg}
+                                            />
+                                            <div className={styles.itemDetails}>
+                                                <p className={styles.itemName}>{item.name}</p>
+                                                {item.options?.length > 0 && (
+                                                    <p className={styles.itemNote}>
+                                                        {item.options.map(opt => opt.name).join(', ')}
+                                                    </p>
+                                                )}
+                                                <div className={styles.itemFooter}>
+                                                    <span className={styles.quantity}>x{item.quantity}</span>
+                                                    <span className={styles.price}>{formatMoney(item.total)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        );
+                    })
+                ) : (
+                    <p style={{ textAlign: 'center', padding: '20px', color: '#888' }}>
+                        Không có đơn hàng
+                    </p>
+                )}
+            </div>
+
+            <div className={styles.summaryCard}>
+                <div className={styles.billRow}>
+                    <span>Tổng tiền:</span>
+                    <span>{formatMoney(invoice.total || 0)}</span>
+                </div>
+                {invoice.discount > 0 && (
+                    <div className={styles.discountRow}>
+                        <span>Giảm giá:</span>
+                        <span className={styles.discountAmount}>-{formatMoney(invoice.discount)}</span>
+                    </div>
+                )}
+                <div className={styles.totalRow}>
+                    <span>Tổng thanh toán:</span>
+                    <strong className={styles.totalAmount}>{formatMoney(invoice.final_total || 0)}</strong>
+                </div>
+            </div>
+        </>
+    );
 
     if (loading) {
         return (
@@ -183,9 +233,15 @@ function OrderTracking() {
         );
     }
 
-    if (!orders || orders.length === 0) {
+    if (!pendingInvoice && paidInvoices.length === 0) {
         return (
             <div className={styles.container}>
+                <header className={styles.header}>
+                    <button className={styles.backBtn} onClick={handleAddMore}>
+                        <IoArrowUndoSharp size={24} />
+                    </button>
+                    <h1>Đơn hàng</h1>
+                </header>
                 <div className={styles.empty}>
                     <MdReceiptLong className={styles.emptyIcon} />
                     <h2>Chưa có đơn hàng</h2>
@@ -198,8 +254,7 @@ function OrderTracking() {
         );
     }
 
-    const isPaid = invoice?.status === 1;
-    const hasPendingOrders = orders.some(o => o.state === 0);
+    const hasPendingOrders = pendingInvoice?.orders?.some(o => o.state === 0);
 
     return (
         <div className={styles.container}>
@@ -208,144 +263,49 @@ function OrderTracking() {
                     <IoArrowUndoSharp size={24} />
                 </button>
                 <h1>Đơn hàng</h1>
-                <div className={styles.status}>
-                    {isPaid ? (
-                        <span className={styles.paid}>
-                            <MdCheckCircle /> Đã thanh toán
-                        </span>
-                    ) : (
-                        <span className={styles.pending}>
-                            <MdAccessTime /> Chưa thanh toán
-                        </span>
-                    )}
-                </div>
             </header>
 
-            <div className={styles.infoCard}>
-                <div className={styles.infoRow}>
-                    <span className='fs-6'><MdTableRestaurant size={30} /> Bàn:</span>
-                    <strong>{orders[0]?.table_name}</strong>
-                </div>
-                {invoice?.invoice_id && (
-                    <div className={styles.infoRow}>
-                        <span><MdReceiptLong /> Mã HĐ:</span>
-                        <strong>{invoice.invoice_id.slice(0, 8).toUpperCase()}</strong>
+            {pendingInvoice && (
+                <>
+                    <div className={styles.sectionHeader}>
+                        <h2>Chưa thanh toán</h2>
+                        <span className={styles.pending}>
+                            <MdAccessTime /> Chờ thanh toán
+                        </span>
                     </div>
-                )}
-            </div>
 
-            <div className={styles.ordersList}>
-                <h2>Món đã gọi ({orders.length} lần)</h2>
-                {orders.map((order, idx) => {
-                    const stateInfo = getOrderState(order.state);
-                    const StateIcon = stateInfo.icon;
+                    {renderInvoiceDetail(pendingInvoice, false)}
 
-                    return (
-                        <div key={order.order_id} className={styles.orderCard}>
-                            <div className={styles.orderHeader}>
-                                <div>
-                                    <span className={styles.orderNumber}>Lần {idx + 1}</span>
-                                    <span className={styles.orderTime}>
-                                        {formatTime(order.created_at)}
-                                    </span>
-                                </div>
-                                <div
-                                    className={styles.orderState}
-                                    style={{ color: stateInfo.color }}
-                                >
-                                    <StateIcon size={18} />
-                                    <span>{stateInfo.text}</span>
-                                </div>
-                            </div>
-
-                            <div className={styles.items}>
-                                {order.items?.map(item => (
-                                    <div key={item.order_detail_id} className={styles.item}>
-                                        <img
-                                            src={`${import.meta.env.VITE_IMG_URL}${item.img}` || '/placeholder.png'}
-                                            alt={item.name}
-                                            className={styles.itemImg}
-                                        />
-                                        <div className={styles.itemDetails}>
-                                            <p className={styles.itemName}>{item.name}</p>
-                                            {item.note && (
-                                                <p className={styles.itemNote}>Ghi chú: {item.note}</p>
-                                            )}
-                                            <div className={styles.itemFooter}>
-                                                <span className={styles.quantity}>x{item.quantity}</span>
-                                                <span className={styles.price}>{formatMoney(item.total)}</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className={styles.orderTotal}>
-                                Tổng lần {idx + 1}: <strong>
-                                    {formatMoney(
-                                        order.items?.reduce((sum, item) => sum + Number(item.total), 0) || 0
-                                    )}
-                                </strong>
-                            </div>
-                        </div>
-                    );
-                })}
-            </div>
-
-            <div className={styles.summaryCard}>
-                {invoice && (
-                    <>
-                        {invoice.discount > 0 && (
-                            <div className={styles.discountRow}>
-                                <span>Giảm giá:</span>
-                                <span className={styles.discountAmount}>
-                                    -{formatMoney(invoice.discount)}
-                                </span>
-                            </div>
-                        )}
-                        <div className={styles.totalRow}>
-                            <span>Tổng thanh toán:</span>
-                            <strong className={styles.totalAmount}>
-                                {formatMoney(invoice.final_total || calculateTotal())}
-                            </strong>
-                        </div>
-                    </>
-                )}
-                {!invoice && (
-                    <div className={styles.totalRow}>
-                        <span>Tổng cộng:</span>
-                        <strong className={styles.totalAmount}>
-                            {formatMoney(calculateTotal())}
-                        </strong>
-                    </div>
-                )}
-            </div>
-
-            <div className={styles.footer}>
-                {!isPaid ? (
-                    <>
-                        <button
-                            className={styles.btnPrimary}
-                            onClick={handleGoToPayment}
-                        >
+                    <div className={styles.footer}>
+                        <button className={styles.btnPrimary} onClick={handleGoToPayment}>
                             <MdPayment /> Thanh toán
                         </button>
 
                         {hasPendingOrders && (
-                            <button
-                                className={styles.btnDanger}
-                                onClick={() => setShowCancelModal(true)}
-                            >
+                            <button className={styles.btnDanger} onClick={() => setShowCancelModal(true)}>
                                 <MdCancel /> Hủy đơn chưa xác nhận
                             </button>
                         )}
-                    </>
-                ) : (
-                    <button className={styles.btnSecondary} onClick={handleAddMore}>
-                        Về Menu
-                    </button>
-                )}
-            </div>
+                    </div>
+                </>
+            )}
+
+            {paidInvoices.length > 0 && (
+                <>
+                    <div className={styles.sectionHeader} style={{ marginTop: pendingInvoice ? '40px' : '0' }}>
+                        <h2>Đã thanh toán</h2>
+                        <span className={styles.paid}>
+                            <MdCheckCircle /> Hoàn tất
+                        </span>
+                    </div>
+
+                    {paidInvoices.map(invoice => (
+                        <div key={invoice.invoice_id} className={styles.paidSection}>
+                            {renderInvoiceDetail(invoice, true)}
+                        </div>
+                    ))}
+                </>
+            )}
 
             <ConfirmModal
                 isOpen={showCancelModal}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import styles from "./CouponModal.module.css";
 import { MdClose, MdCheckCircle } from "react-icons/md";
+import { RiCoupon2Line } from "react-icons/ri";
 import couponService from "../../../../services/couponService";
 import { toast } from "react-toastify";
 
@@ -24,11 +25,13 @@ function CouponModal({ show, onClose, onApply, orderTotal = 0 }) {
             const activeCoupons = (res.data || []).filter(c => c.state === 1);
             setCoupons(activeCoupons);
         } catch (error) {
-            console.error('Error fetching coupons:', error);
+            console.error('Lỗi', error);
         }
     };
 
-    const handleValidate = async (code) => {
+    const handleValidate = async (codeToValidate = null) => {
+        const code = codeToValidate || selectedCode;
+
         if (!code.trim()) {
             toast.warning('Vui lòng nhập mã');
             return;
@@ -42,10 +45,8 @@ function CouponModal({ show, onClose, onApply, orderTotal = 0 }) {
                 coupon: res.data.coupon,
                 discount: res.data.discount
             });
-            toast.success('Mã hợp lệ!');
         } catch (error) {
             setValidationResult({ valid: false });
-            toast.error(error.response?.data?.message || 'Mã không hợp lệ');
         } finally {
             setLoading(false);
         }
@@ -53,16 +54,23 @@ function CouponModal({ show, onClose, onApply, orderTotal = 0 }) {
 
     const handleApply = () => {
         if (!validationResult?.valid) {
-            toast.warning('Vui lòng kiểm tra mã trước');
             return;
         }
 
         onApply({
             id: validationResult.coupon.coupon_id,
             code: validationResult.coupon.code,
+            type: validationResult.coupon.type,
+            value: validationResult.coupon.value,
+            max_discount: validationResult.coupon.max_discount,
             discount: validationResult.discount
         });
         onClose();
+    };
+
+    const handleSelectCoupon = (code) => {
+        setSelectedCode(code);
+        handleValidate(code);
     };
 
     const formatMoney = (num) => {
@@ -76,56 +84,42 @@ function CouponModal({ show, onClose, onApply, orderTotal = 0 }) {
             <div className={styles.overlay} onClick={onClose} />
 
             <div className={styles.modal}>
+                <button onClick={onClose} className={styles.closeBtn}>
+                    <MdClose size={24} />
+                </button>
+
                 <div className={styles.header}>
-                    <div>
-                        <h3>Chọn mã giảm giá</h3>
-                        <small>Tổng đơn: {formatMoney(orderTotal)}</small>
-                    </div>
-                    <button onClick={onClose} className={styles.closeBtn}>
-                        <MdClose size={24} />
-                    </button>
+                    <h3>Nhập mã giảm giá</h3>
                 </div>
 
                 <div className={styles.body}>
-                    <div className={styles.inputGroup}>
+                    <div className={styles.inputWrapper}>
                         <input
                             type="text"
-                            placeholder="Nhập mã giảm giá..."
+                            placeholder="Nhập mã..."
                             value={selectedCode}
                             onChange={(e) => setSelectedCode(e.target.value.toUpperCase())}
-                            onKeyPress={(e) => e.key === 'Enter' && handleValidate(selectedCode)}
+                            onKeyPress={(e) => e.key === 'Enter' && handleValidate()}
+                            className={styles.input}
                         />
                         <button
-                            onClick={() => handleValidate(selectedCode)}
+                            onClick={() => handleValidate()}
                             disabled={loading}
                             className={styles.checkBtn}
                         >
-                            {loading ? '...' : 'Kiểm tra'}
+                            <MdCheckCircle size={24} />
                         </button>
                     </div>
 
                     {validationResult && (
-                        <div className={validationResult.valid ? styles.validBox : styles.invalidBox}>
+                        <div className={validationResult.valid ? styles.validMsg : styles.invalidMsg}>
                             {validationResult.valid ? (
-                                <>
-                                    <MdCheckCircle size={24} />
-                                    <div>
-                                        <strong>Mã hợp lệ!</strong>
-                                        <p>Giảm: {formatMoney(validationResult.discount)}</p>
-                                        {validationResult.coupon.description && (
-                                            <small>{validationResult.coupon.description}</small>
-                                        )}
-                                    </div>
-                                </>
+                                <p>Giảm: <strong>{formatMoney(validationResult.discount)}</strong></p>
                             ) : (
                                 <p>Mã không hợp lệ hoặc không đủ điều kiện</p>
                             )}
                         </div>
                     )}
-
-                    <div className={styles.divider}>
-                        <span>Hoặc chọn mã có sẵn</span>
-                    </div>
 
                     <div className={styles.couponList}>
                         {coupons.length === 0 ? (
@@ -140,19 +134,17 @@ function CouponModal({ show, onClose, onApply, orderTotal = 0 }) {
                                 return (
                                     <div
                                         key={coupon.coupon_id}
-                                        className={`${styles.couponItem} ${!canUse ? styles.disabled : ''}`}
-                                        onClick={() => canUse && setSelectedCode(coupon.code)}
+                                        className={`${styles.couponCard} ${!canUse ? styles.disabled : ''}`}
+                                        onClick={() => canUse && handleSelectCoupon(coupon.code)}
                                     >
-                                        <div className={styles.couponLeft}>
+                                        <div className={styles.couponIcon}>
+                                            <RiCoupon2Line size={24} />
+                                        </div>
+                                        <div className={styles.couponInfo}>
                                             <h5>{coupon.code}</h5>
                                             <p>{coupon.description || 'Giảm giá đơn hàng'}</p>
-                                            <small>
-                                                Giảm: {formatMoney(discount)} • Đơn tối thiểu: {formatMoney(coupon.min_amount)}
-                                            </small>
                                         </div>
-                                        {!canUse && (
-                                            <span className={styles.badge}>Không đủ điều kiện</span>
-                                        )}
+                                        {!canUse && <span className={styles.badge}>Chưa đủ</span>}
                                     </div>
                                 );
                             })

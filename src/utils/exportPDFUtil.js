@@ -2,111 +2,254 @@ import { jsPDF } from 'jspdf';
 
 export function printInvoice(orderData, restaurantInfo = {}) {
     try {
+        const items = orderData.items || [];
+
+        // ============ TÍNH CHIỀU CAO ĐỘNG ============
+        let totalContentHeight = 0;
+
+        items.forEach((item) => {
+            const baseName = convertVietnamese(
+                String(item.name || item.product_name || 'N/A')
+            );
+
+            const tempDoc = new jsPDF({
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            });
+            tempDoc.setFont('Courier', 'normal');
+            tempDoc.setFontSize(7);
+
+            const nameLines = tempDoc.splitTextToSize(baseName, 40);
+            let itemHeight = nameLines.length * 3.5;
+
+            if (item.options && item.options.length > 0) {
+                tempDoc.setFontSize(6);
+                item.options.forEach((opt) => {
+                    const optionText = convertVietnamese(`+ ${opt.name}`);
+                    const optLines = tempDoc.splitTextToSize(optionText, 40);
+                    itemHeight += optLines.length * 3.2;
+                });
+            }
+
+            totalContentHeight += Math.max(itemHeight, 4);
+        });
+
+        const baseHeight = 60;
+        const totalSection = 16;
+        const discountHeight = parseFloat(orderData.discount) > 0 ? 4 : 0;
+
+        const pageHeight = baseHeight + totalContentHeight + totalSection + discountHeight + 10;
+        const minHeight = 100;
+        const finalPageHeight = Math.max(pageHeight, minHeight);
+
         const doc = new jsPDF({
             orientation: 'portrait',
             unit: 'mm',
-            format: [80, 200]
+            format: [80, finalPageHeight]
         });
 
         doc.setFont('Courier');
-        doc.setLanguage('vi');
 
-        // !HEADER
-        doc.setFontSize(14);
+        // ============ HEADER ============
+        doc.setFontSize(12);
         doc.setFont('Courier', 'bold');
-        doc.text(restaurantInfo.name || 'QUÁN ĂN KUN GA CHU', 40, 10, { align: 'center' });
+        const name = convertVietnamese(restaurantInfo.name || 'QUAN AN');
+        doc.text(name, 40, 10, { align: 'center' });
 
-        doc.setFontSize(9);
+        doc.setFontSize(8);
         doc.setFont('Courier', 'normal');
         if (restaurantInfo.address) {
-            doc.text(restaurantInfo.address, 40, 15, { align: 'center' });
+            const address = convertVietnamese(restaurantInfo.address);
+            doc.text(address, 40, 15, { align: 'center' });
         }
         if (restaurantInfo.phone) {
             doc.text(restaurantInfo.phone, 40, 19, { align: 'center' });
         }
 
-        // Divider
         doc.setDrawColor(0);
         doc.line(5, 22, 75, 22);
 
-        // Thông tin đơn
-        doc.setFontSize(9);
-        const now = new Date();
+        // ============ THÔNG TIN ĐƠN ============
+        doc.setFontSize(8);
+        const now = new Date(orderData.created_at || Date.now());
         const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
         const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
 
-        doc.text(`Bàn: ${orderData.table || '1'}`, 5, 27);
-        doc.text(`Ngày: ${dateStr}`, 5, 32);
-        doc.text(`Giờ: ${timeStr}`, 5, 37);
+        doc.text(`Ban: ${convertVietnamese(orderData.table_name || '1')}`, 5, 27);
+        doc.text(`Ma HD: ${(orderData.invoice_id || '').substring(0, 13).toUpperCase()}`, 5, 31);
+        doc.text(`Ngay: ${dateStr}`, 5, 35);
+        doc.text(`Gio: ${timeStr}`, 45, 35);
 
-        doc.line(5, 40, 75, 40);
+        doc.line(5, 38, 75, 38);
 
-        // Món
-        let y = 45;
+        // ============ ITEMS HEADER ============
+        let y = 42;
         doc.setFont('Courier', 'bold');
-        doc.setFontSize(9);
-        doc.text('Tên Món', 5, y);
-        doc.text('SL', 50, y);
-        doc.text('Giá', 60, y);
-
-        y += 3;
-        doc.line(5, y, 75, y);
-
-        y += 5;
-        doc.setFont('Courier', 'normal');
         doc.setFontSize(8);
+        doc.text('STT', 5, y);
+        doc.text('Ten mon', 12, y);
+        doc.text('SL', 50, y);
+        doc.text('Tien', 62, y);
+
+        y += 2;
+        doc.line(5, y, 75, y);
+        y += 4;
+
+        // ============ ITEMS LIST ============
+        doc.setFont('Courier', 'normal');
+        doc.setFontSize(7);
 
         let totalAmount = 0;
 
-        orderData.items.forEach(item => {
-            const itemName = String(item.name || '').substring(0, 20);
-            const quantity = item.quantity || 1;
-            const price = item.price || 0;
-            const total = quantity * price;
-            totalAmount += total;
+        items.forEach((item, index) => {
+            const baseName = convertVietnamese(
+                String(item.name || item.product_name || 'N/A')
+            );
 
-            // Tên món
-            const nameLines = doc.splitTextToSize(itemName, 40);
+            const quantity = item.quantity || 1;
+            const price = parseFloat(item.price) || 0;
+
+            let toppingTotal = 0;
+            if (item.options && item.options.length > 0) {
+                item.options.forEach((opt) => {
+                    toppingTotal += parseFloat(opt.plus_price) || 0;
+                });
+            }
+
+            const itemTotal = (price + toppingTotal) * quantity;
+            totalAmount += itemTotal;
+
+            // STT
+            doc.text(String(index + 1), 5, y);
+
+            const nameLines = doc.splitTextToSize(baseName, 40);
+            let currentY = y;
             nameLines.forEach((line, idx) => {
-                doc.text(line, 5, y + (idx * 4));
+                doc.text(line, 12, currentY + idx * 3.5);
             });
 
-            // SL
+            let nameHeight = nameLines.length * 3.5;
+            currentY = y + nameHeight;
+
+            if (item.options && item.options.length > 0) {
+                doc.setFont('Courier', 'normal');
+                doc.setFontSize(6);
+                item.options.forEach((opt) => {
+                    const optionText = convertVietnamese(`+ ${opt.name}`);
+                    const optLines = doc.splitTextToSize(optionText, 40);
+                    const optPrice = parseFloat(opt.plus_price) || 0;
+
+                    optLines.forEach((optLine, idx) => {
+                        // In tên topping
+                        doc.text(optLine, 12, currentY);
+
+                        if (idx === 0 && optPrice > 0) {
+                            doc.text(formatMoney(optPrice), 62, currentY);
+                        }
+
+                        currentY += 3.2;
+                    });
+                });
+                doc.setFont('Courier', 'normal');
+                doc.setFontSize(7);
+            }
+
+            doc.setFontSize(7);
             doc.text(String(quantity), 50, y);
+            const basePrice = price * quantity;
+            doc.text(formatMoney(basePrice), 62, y);
 
-            // Giá
-            const priceStr = new Intl.NumberFormat('vi-VN').format(total);
-            doc.text(priceStr, 60, y);
+            let totalItemHeight = nameHeight;
+            if (item.options && item.options.length > 0) {
+                item.options.forEach((opt) => {
+                    const optionText = convertVietnamese(`+ ${opt.name}`);
+                    const tempDoc = new jsPDF({
+                        orientation: 'portrait',
+                        unit: 'mm',
+                        format: 'a4'
+                    });
+                    tempDoc.setFont('Courier', 'normal');
+                    tempDoc.setFontSize(6);
+                    const optLines = tempDoc.splitTextToSize(optionText, 40);
+                    totalItemHeight += optLines.length * 3.2;
+                });
+            }
 
-            y += Math.max(nameLines.length * 4, 5);
+            y += Math.max(totalItemHeight, 4) + 1;
         });
 
-        // Tổng
-        y += 2;
+        // ============ TỔNG TIỀN ============
+        y += 1;
         doc.line(5, y, 75, y);
-        y += 5;
+        y += 4;
 
         doc.setFont('Courier', 'bold');
-        doc.setFontSize(10);
-        const totalStr = new Intl.NumberFormat('vi-VN').format(totalAmount);
-        doc.text('TỔNG CỘNG:', 5, y);
-        doc.text(totalStr + 'đ', 60, y);
+        doc.setFontSize(9);
+        doc.text('Tong cong:', 5, y);
+        doc.text(formatMoney(totalAmount), 62, y);
 
-        // ! FOOTER
-        y += 10;
+        // ============ GIẢM GIÁ ============
+        let discount = parseFloat(orderData.discount) || 0;
+        if (discount > 0) {
+            y += 4;
+            doc.setFont('Courier', 'normal');
+            doc.setFontSize(8);
+            doc.text('Giam gia:', 5, y);
+            doc.text('-' + formatMoney(discount), 62, y);
+        }
+
+        // ============ THÀNH TIỀN ============
+        y += 4;
+        doc.setFont('Courier', 'bold');
+        doc.setFontSize(10);
+        const finalTotal = totalAmount - discount;
+        doc.text('THANH TIEN:', 5, y);
+        doc.text(formatMoney(finalTotal), 62, y);
+
+        // ============ FOOTER ============
+        y += 8;
         doc.setFont('Courier', 'normal');
         doc.setFontSize(8);
-        doc.text('Cảm ơn quý khách!', 40, y, { align: 'center' });
-        doc.text('Hẹn gặp lại!', 40, y + 4, { align: 'center' });
+        doc.text('Cam on quy khach!', 40, y, { align: 'center' });
+        doc.text('Hen gap lai!', 40, y + 4, { align: 'center' });
 
-        // Lưu
-        const fileName = `HoaDon_${Date.now()}.pdf`;
+        // ============ SAVE ============
+        const fileName = `HoaDon_${orderData.table_name}_${Date.now()}.pdf`;
         doc.save(fileName);
 
-        return { success: true, message: 'In hóa đơn thành công!' };
+        return { success: true, message: 'In hoa don thanh cong!' };
 
     } catch (error) {
-        console.error('Lỗi in hóa đơn:', error);
         return { success: false, message: error.message };
     }
 }
+
+function formatMoney(num) {
+    const parsed = parseFloat(num) || 0;
+    return parsed.toLocaleString('vi-VN').replace(/\./g, ',') + 'd';
+}
+
+function convertVietnamese(str) {
+    if (!str) return '';
+
+    str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, 'a');
+    str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, 'e');
+    str = str.replace(/ì|í|ị|ỉ|ĩ/g, 'i');
+    str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, 'o');
+    str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, 'u');
+    str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, 'y');
+    str = str.replace(/đ/g, 'd');
+
+    str = str.replace(/À|Á|Ạ|Ả|Ã|Â|Ầ|Ấ|Ậ|Ẩ|Ẫ|Ă|Ằ|Ắ|Ặ|Ẳ|Ẵ/g, 'A');
+    str = str.replace(/È|É|Ẹ|Ẻ|Ẽ|Ê|Ề|Ế|Ệ|Ể|Ễ/g, 'E');
+    str = str.replace(/Ì|Í|Ị|Ỉ|Ĩ/g, 'I');
+    str = str.replace(/Ò|Ó|Ọ|Ỏ|Õ|Ô|Ồ|Ố|Ộ|Ổ|Ỗ|Ơ|Ờ|Ớ|Ợ|Ở|Ỡ/g, 'O');
+    str = str.replace(/Ù|Ú|Ụ|Ủ|Ũ|Ư|Ừ|Ứ|Ự|Ử|Ữ/g, 'U');
+    str = str.replace(/Ỳ|Ý|Ỵ|Ỷ|Ỹ/g, 'Y');
+    str = str.replace(/Đ/g, 'D');
+
+    return str;
+}
+
+export default { printInvoice };

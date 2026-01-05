@@ -203,7 +203,6 @@
     cursor: pointer;
     transition: all 0.2s ease;
     user-select: none;
-    /* ✅ Prevent text selection */
 }
 
 .optionRow:hover {
@@ -211,7 +210,6 @@
     background: #fef3f2;
 }
 
-/* ✅ THÊM STYLE KHI SELECTED */
 .optionRow.selected {
     border-color: var(--primary-color);
     background: linear-gradient(135deg, #fff 0%, #fef3f2 100%);
@@ -225,7 +223,6 @@
     cursor: pointer;
     accent-color: var(--primary-color);
     flex-shrink: 0;
-    /* ✅ Đảm bảo pointer events */
     pointer-events: auto;
 }
 

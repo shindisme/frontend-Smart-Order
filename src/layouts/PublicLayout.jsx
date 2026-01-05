@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
-import useLocalStorage from "../hooks/useLocalStorage";
+import { useSearchParams } from "react-router-dom";
+import { useCart } from "../hooks/useCart";
+import tableService from "../services/tableService";
 import Header from "../components/Public/Header/Header";
 import MenuTop from "../components/Public/Content/MenuTop/MenuTop";
 import CategoryTabs from "../components/Public/Content/CategoryTabs/CategoryTabs";
@@ -9,19 +11,18 @@ import SideBar from "../components/Public/Header/SideBar/SideBar";
 import CartModal from "../components/Public/Modals/Cart/CartModal";
 import OptionsModal from "../components/Public/Modals/OptionsModal/OptionsModal";
 import styles from './PublicLayout.module.css';
-import { useSearchParams } from "react-router-dom";
-import tableService from "../services/tableService";
 
 function PublicLayout() {
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
+
+    const { cart, setCart, addItem, removeItem, updateItem, clearCart, getTotalPrice, getItemCount } = useCart(tableId);
 
     const [activeCategoryId, setActiveCategoryId] = useState('0');
     const [selectedItem, setSelectedItem] = useState(null);
     const [showOptionsModal, setShowOptionsModal] = useState(false);
     const [isCollapsed, setIsCollapsed] = useState(false);
     const [showCartModal, setShowCartModal] = useState(false);
-    const [cartItems, setCartItems] = useLocalStorage('guestCart', []);
     const [searchTerm, setSearchTerm] = useState('');
 
     const handleCategoryChange = (categoryId) => {
@@ -31,27 +32,6 @@ function PublicLayout() {
     const handleSearchChange = (term) => {
         setSearchTerm(term);
     };
-
-    if (!tableId) {
-        return (
-            <div style={{
-                minHeight: "100vh",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                textAlign: "center",
-                padding: 24,
-                background: "var(--bg-color)"
-            }}>
-                <div>
-                    <h2 style={{ marginBottom: 16, color: "var(--text-primary-color)" }}>
-                        Vui lòng quét mã QR tại bàn
-                    </h2>
-                    <p style={{ color: "#999" }}>Để đặt món, vui lòng quét mã QR trên bàn</p>
-                </div>
-            </div>
-        );
-    }
 
     useEffect(() => {
         const fetchTable = async () => {
@@ -75,6 +55,27 @@ function PublicLayout() {
         }
     }, [tableId]);
 
+    if (!tableId) {
+        return (
+            <div style={{
+                minHeight: "100vh",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                textAlign: "center",
+                padding: 24,
+                background: "var(--bg-color)"
+            }}>
+                <div>
+                    <h2 style={{ marginBottom: 16, color: "var(--text-primary-color)" }}>
+                        Vui lòng quét mã QR tại bàn
+                    </h2>
+                    <p style={{ color: "#999" }}>Để đặt món, vui lòng quét mã QR trên bàn</p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className={styles.publicLayout}>
             <header>
@@ -93,8 +94,12 @@ function PublicLayout() {
                     <CartModal
                         showCartModal={showCartModal}
                         setShowCartModal={setShowCartModal}
-                        cartItems={cartItems}
-                        setCartItems={setCartItems}
+                        cart={cart}
+                        setCart={setCart}
+                        removeItem={removeItem}
+                        updateItem={updateItem}
+                        clearCart={clearCart}
+                        getTotalPrice={getTotalPrice}
                     />
                 )}
 
@@ -120,16 +125,16 @@ function PublicLayout() {
                             showModal={showOptionsModal}
                             setShowModal={setShowOptionsModal}
                             selectedItem={selectedItem}
-                            setCartItems={setCartItems}
+                            addItem={addItem}
                         />
                     )}
                 </div>
             </main>
 
             <footer>
-                {!showOptionsModal && cartItems.length > 0 && (
+                {!showOptionsModal && cart.length > 0 && (
                     <Footer
-                        cartCount={cartItems.length}
+                        cartCount={getItemCount()}
                         showCartModal={showCartModal}
                         setShowCartModal={setShowCartModal}
                     />

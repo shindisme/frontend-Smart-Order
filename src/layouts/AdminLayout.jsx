@@ -11,10 +11,7 @@ function AdminLayout() {
     <div className={`${styles.adminLayout} ${collapsed ? styles.collapsed : ""}`}>
       {/* Sidebar */}
       <aside className={`${styles.sidebar} ${collapsed ? styles.collapsed : ""}`}>
-        <Sidebar
-          collapsed={collapsed}
-          setCollapsed={setCollapsed}
-        />
+        <Sidebar collapsed={collapsed} setCollapsed={setCollapsed} />
       </aside>
 
       {/* Header */}

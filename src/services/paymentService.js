@@ -10,6 +10,9 @@ const paymentService = {
     },
     async create(data) {
         return await api.post('/payments', data);
+    },
+    async createVnpayPayment(data) {
+        return await api.post('/payments/vnpay/create-payment-url', data);
     }
 };
 

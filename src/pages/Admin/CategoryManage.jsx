@@ -11,10 +11,8 @@ import { exportCategoryToExcel } from "../../utils/exportExcelUtil";
 import { useFetch } from "../../hooks/useFetch";
 
 function CategoryManage() {
-    // Hook fetch data
     const { data: categories, loading, refetch } = useFetch(categoryService);
 
-    // State
     const [filteredCategories, setFilteredCategories] = useState([]);
     const [paginatedCategories, setPaginatedCategories] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -114,7 +112,7 @@ function CategoryManage() {
             refetch();
         } catch (err) {
             console.error('Lỗi xóa: ', err);
-            toast.error(err.response?.data?.message || 'Lỗi khi xóa');
+            toast.error('Lỗi khi xóa');
         } finally {
             setShowDeleteConfirm(false);
             setCategoryToDelete(null);

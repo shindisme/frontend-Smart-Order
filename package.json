@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 3000 --host",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -28,6 +28,7 @@
     "react-qr-code": "^2.0.18",
     "react-router-dom": "^7.9.6",
     "react-toastify": "^11.0.5",
+    "recharts": "^3.6.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

@@ -4,18 +4,13 @@ import TopBar from "../../components/Admin/Content/TopBar/TopBar";
 import TableLayout from "../../components/Admin/Content/TableLayout/TableLayout";
 import Pagination from "../../components/common/Pagination";
 import ModalInvoiceDetail from "../../components/Admin/Content/Modals/ModalInvoiceDetail/ModalInvoiceDetail";
-import ModalCreateInvoice from "../../components/Admin/Content/Modals/ModalCreateInvoice/ModalCreateInvoice";
 import { toast } from "react-toastify";
 import { searchMatch } from "../../utils/removeTonesUtil";
 import { useFetch } from "../../hooks/useFetch";
 import { Badge, Button } from "react-bootstrap";
-import { FaFileInvoiceDollar } from "react-icons/fa";
 
 function InvoiceManage() {
-    // Lấy data từ API
     const { data: invoices, loading, refetch } = useFetch(invoiceService);
-
-    // State cơ bản
     const [filteredInvoices, setFilteredInvoices] = useState([]);
     const [paginatedInvoices, setPaginatedInvoices] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -24,25 +19,21 @@ function InvoiceManage() {
     const [itemsPerPage, setItemsPerPage] = useState(10);
     const [selectedInvoice, setSelectedInvoice] = useState(null);
     const [showDetailModal, setShowDetailModal] = useState(false);
-    const [showCreateModal, setShowCreateModal] = useState(false);
 
-    // Lọc data khi search hoặc filter
     useEffect(() => {
         let result = invoices.filter(inv =>
             (!searchTerm || searchMatch(inv.invoice_id, searchTerm) || searchMatch(inv.table_name, searchTerm)) &&
-            (filters.status === undefined || filters.status === '' || inv.status == filters.status)
+            (!filters.status || inv.status == filters.status)
         );
         setFilteredInvoices(result);
         setCurrentPage(1);
     }, [searchTerm, filters, invoices]);
 
-    // Phân trang
     useEffect(() => {
         const start = (currentPage - 1) * itemsPerPage;
         setPaginatedInvoices(filteredInvoices.slice(start, start + itemsPerPage));
     }, [filteredInvoices, currentPage, itemsPerPage]);
 
-    // Làm mới
     const handleRefresh = () => {
         setSearchTerm('');
         setFilters({});
@@ -50,21 +41,32 @@ function InvoiceManage() {
         refetch();
     };
 
-    // Thanh toán
     const handlePay = async (invoice_id) => {
         try {
             const res = await invoiceService.pay(invoice_id);
             toast.success(res.message);
             refetch();
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Lỗi');
+            toast.error(error.response?.data?.message || 'Lỗi thanh toán');
         }
     };
 
-    // Cột của bảng
+    const handleOpenDetail = async (invoice) => {
+        try {
+            const response = await invoiceService.getById(invoice.invoice_id);
+            if (response.data) {
+                setSelectedInvoice(response.data);
+                setShowDetailModal(true);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            toast.error('Lỗi tải dữ liệu hóa đơn');
+        }
+    };
+
     const columns = [
         { name: "STT", key: "stt" },
-        { name: "Mã HĐ", key: "invoice_code" },
+        { name: "Mã HD", key: "invoice_code" },
         { name: "Bàn", key: "table" },
         { name: "Tổng tiền", key: "total" },
         { name: "Giảm giá", key: "discount" },
@@ -74,23 +76,30 @@ function InvoiceManage() {
         { name: "Thao tác", key: "actions" },
     ];
 
-    // Dữ liệu hiển thị
     const data = paginatedInvoices.map((invoice, index) => ({
         stt: (currentPage - 1) * itemsPerPage + index + 1,
-        invoice_code: <strong className="text-danger">#{invoice.invoice_id.slice(0, 8).toUpperCase()}</strong>,
-        table: invoice.table_name,
+        invoice_code: <strong className="text-primary">#{invoice.invoice_id.slice(0, 13).toUpperCase()}</strong>,
+        table: <strong>{invoice.table_name}</strong>,
         total: `${new Intl.NumberFormat('vi-VN').format(invoice.total)}đ`,
         discount: invoice.discount > 0 ? (
-            <span className="text-danger">{new Intl.NumberFormat('vi-VN').format(invoice.discount)}đ</span>
-        ) : '0đ',
+            <span className="text-danger">-{new Intl.NumberFormat('vi-VN').format(invoice.discount)}đ</span>
+        ) : '—',
         final_total: <strong className="text-success">{new Intl.NumberFormat('vi-VN').format(invoice.final_total)}đ</strong>,
-        status: <Badge bg={invoice.status === 1 ? "success" : "warning"}>{invoice.status === 1 ? "Đã thanh toán" : "Chưa thanh toán"}</Badge>,
+        status: invoice.status === 1 ? (
+            <Badge bg="success">Đã thanh toán</Badge>
+        ) : (
+            <Badge bg="warning" text="dark">Chưa thanh toán</Badge>
+        ),
         created_at: new Date(invoice.created_at).toLocaleString('vi-VN'),
-        actions: invoice.status === 0 && (
-            <Button size="sm" variant="warning" onClick={() => handlePay(invoice.invoice_id)}>
+        actions: invoice.status === 0 ? (
+            <Button
+                size="sm"
+                variant="success"
+                onClick={() => handlePay(invoice.invoice_id)}
+            >
                 Thanh toán
             </Button>
-        ),
+        ) : null,
         fullData: invoice
     }));
 
@@ -98,7 +107,6 @@ function InvoiceManage() {
 
     return (
         <>
-            {/* Thanh tìm kiếm + filter */}
             <TopBar
                 onAdd={null}
                 onSearch={setSearchTerm}
@@ -117,22 +125,14 @@ function InvoiceManage() {
                 onFilter={setFilters}
             />
 
-            <div className="d-flex justify-content-between align-items-center mb-4">
-                <h2>
-                    Danh sách hóa đơn
-                </h2>
-            </div>
+            <h2 className="mb-4">Danh sách hóa đơn</h2>
 
-            {/* Bảng data */}
             <TableLayout
                 columns={columns}
                 data={data}
-                onRead={(row) => { setSelectedInvoice(row.fullData); setShowDetailModal(true); }}
-                onUpdate={null}
-                onDelete={null}
+                onRead={(row) => handleOpenDetail(row.fullData)}
             />
 
-            {/* Phân trang */}
             <Pagination
                 currentPage={currentPage}
                 totalPages={Math.ceil(filteredInvoices.length / itemsPerPage)}
@@ -141,20 +141,12 @@ function InvoiceManage() {
                 onItemsPerPageChange={setItemsPerPage}
             />
 
-            {/* Modal xem chi tiết */}
             <ModalInvoiceDetail
                 show={showDetailModal}
                 invoice={selectedInvoice}
                 onClose={() => setShowDetailModal(false)}
                 onPay={handlePay}
                 onRefresh={refetch}
-            />
-
-            {/* Modal tạo mới */}
-            <ModalCreateInvoice
-                show={showCreateModal}
-                onClose={() => setShowCreateModal(false)}
-                onSuccess={() => { setShowCreateModal(false); refetch(); }}
             />
         </>
     );

@@ -1,155 +1,163 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
-import { toast } from 'react-toastify';
-import { MdCheckCircle, MdError } from 'react-icons/md';
-import invoiceService from '../../services/invoiceService';
-import styles from './PaymentResult.module.css';
+// import { useEffect, useState } from 'react';
+// import { useNavigate, useSearchParams } from 'react-router-dom';
+// import { toast } from 'react-toastify';
+// import { MdCheckCircle, MdError } from 'react-icons/md';
+// import invoiceService from '../../services/invoiceService';
+// import { CartStorage } from '../../utils/cartStorage';
+// import styles from './PaymentResult.module.css';
 
-function PaymentResult() {
-    const navigate = useNavigate();
-    const [searchParams] = useSearchParams();
+// function PaymentResult() {
+//     const navigate = useNavigate();
+//     const [searchParams] = useSearchParams();
 
-    const [status, setStatus] = useState('processing'); // processing, success, failed
-    const [message, setMessage] = useState('Đang xử lý thanh toán...');
+//     const [status, setStatus] = useState('processing');
+//     const [message, setMessage] = useState('Đang xử lý thanh toán...');
 
-    const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
-    const vnp_TxnRef = searchParams.get('vnp_TxnRef'); // invoice_id
-    const tableId = searchParams.get('table') || localStorage.getItem('table_id');
+//     const vnp_ResponseCode = searchParams.get('vnp_ResponseCode');
+//     const vnp_TxnRef = searchParams.get('vnp_TxnRef');
+//     const tableId = searchParams.get('table');
 
-    useEffect(() => {
-        processPayment();
-    }, []);
+//     useEffect(() => {
+//         processPayment();
+//     }, []);
 
-    const processPayment = async () => {
-        try {
-            // ✅ KIỂM TRA RESPONSE CODE
-            if (vnp_ResponseCode === '00') {
-                // Thành công
-                try {
-                    // ✅ CẬP NHẬT INVOICE STATUS
-                    await invoiceService.pay(vnp_TxnRef);
+//     const processPayment = async () => {
+//         try {
+//             if (vnp_ResponseCode === '00') {
+//                 try {
+//                     await invoiceService.pay(vnp_TxnRef);
 
-                    // ✅ XÓA LOCALSTORAGE
-                    localStorage.removeItem('currentInvoice');
-                    localStorage.removeItem('guestCart');
-                    localStorage.removeItem('selectedPaymentMethod');
+//                     if (tableId) {
+//                         CartStorage.clearCart(tableId);
+//                     }
 
-                    setStatus('success');
-                    setMessage('Thanh toán thành công!');
-                    toast.success('Thanh toán thành công!');
-                } catch (error) {
-                    console.error('Error updating payment:', error);
-                    setStatus('failed');
-                    setMessage('Lỗi cập nhật thanh toán. Vui lòng liên hệ nhân viên!');
-                }
-            } else {
-                // Thất bại
-                setStatus('failed');
-                setMessage(getErrorMessage(vnp_ResponseCode));
-                toast.error('Thanh toán thất bại!');
-            }
-        } catch (error) {
-            console.error('Payment processing error:', error);
-            setStatus('failed');
-            setMessage('Có lỗi xảy ra. Vui lòng thử lại!');
-        }
-    };
+//                     localStorage.removeItem('selectedPaymentMethod');
 
-    const getErrorMessage = (code) => {
-        const errorMessages = {
-            '07': 'Trừ tiền thành công. Giao dịch bị nghi ngờ (liên quan tới lừa đảo, giao dịch bất thường).',
-            '09': 'Giao dịch không thành công do: Thẻ/Tài khoản chưa đăng ký dịch vụ InternetBanking',
-            '10': 'Giao dịch không thành công do: Khách hàng xác thực thông tin thẻ/tài khoản không đúng quá 3 lần',
-            '11': 'Giao dịch không thành công do: Đã hết hạn chờ thanh toán',
-            '12': 'Giao dịch không thành công do: Thẻ/Tài khoản bị khóa',
-            '13': 'Giao dịch không thành công do Quý khách nhập sai mật khẩu xác thực giao dịch (OTP)',
-            '24': 'Giao dịch không thành công do: Khách hàng hủy giao dịch',
-            '51': 'Giao dịch không thành công do: Tài khoản không đủ số dư',
-            '65': 'Giao dịch không thành công do: Tài khoản đã vượt quá hạn mức giao dịch trong ngày',
-            '75': 'Ngân hàng thanh toán đang bảo trì',
-            '79': 'Giao dịch không thành công do: KH nhập sai mật khẩu thanh toán quá số lần quy định',
-        };
-        return errorMessages[code] || 'Giao dịch không thành công';
-    };
+//                     setStatus('success');
+//                     setMessage('Thanh toán thành công!');
+//                     toast.success('Thanh toán thành công!');
+//                 } catch (error) {
+//                     console.error('Lỗi', error);
+//                     setStatus('failed');
+//                     setMessage('Lỗi cập nhật thanh toán. Vui lòng liên hệ nhân viên!');
+//                 }
+//             } else {
+//                 setStatus('failed');
+//                 setMessage(getErrorMessage(vnp_ResponseCode));
+//                 toast.error('Thanh toán thất bại!');
+//             }
+//         } catch (error) {
+//             console.error('Lỗi: ', error);
+//             setStatus('failed');
+//             setMessage('Có lỗi xảy ra. Vui lòng thử lại!');
+//         }
+//     };
 
-    const handleBackToOrder = () => {
-        if (tableId) {
-            navigate(`/order?table=${tableId}`);
-        } else {
-            navigate('/');
-        }
-    };
+//     const getErrorMessage = (code) => {
+//         const errorMessages = {
+//             '07': 'Giao dịch nghi ngờ gian lận',
+//             '09': 'Thẻ chưa đăng ký InternetBanking',
+//             '10': 'Xác thực sai quá 3 lần',
+//             '11': 'Hết hạn chờ thanh toán',
+//             '12': 'Thẻ/Tài khoản bị khóa',
+//             '13': 'Nhập sai mật khẩu OTP',
+//             '24': 'Khách hàng hủy giao dịch',
+//             '51': 'Tài khoản không đủ số dư',
+//             '65': 'Vượt quá hạn mức giao dịch',
+//             '75': 'Ngân hàng đang bảo trì',
+//             '79': 'Nhập sai mật khẩu quá số lần quy định',
+//         };
+//         return errorMessages[code] || 'Giao dịch không thành công';
+//     };
 
-    const handleBackToMenu = () => {
-        if (tableId) {
-            navigate(`/?table=${tableId}`);
-        } else {
-            navigate('/');
-        }
-    };
+//     const handleBackToOrder = () => {
+//         navigate(tableId ? `/order?table=${tableId}` : '/');
+//     };
 
-    return (
-        <div className={styles.container}>
-            <div className={styles.card}>
-                {status === 'processing' && (
-                    <div className={styles.processing}>
-                        <div className={styles.spinner}></div>
-                        <h2>{message}</h2>
-                    </div>
-                )}
+//     const handleBackToMenu = () => {
+//         navigate(tableId ? `/?table=${tableId}` : '/');
+//     };
 
-                {status === 'success' && (
-                    <div className={styles.success}>
-                        <MdCheckCircle className={styles.icon} />
-                        <h2>Thanh toán thành công!</h2>
-                        <p className={styles.message}>{message}</p>
-                        <div className={styles.info}>
-                            <div className={styles.infoRow}>
-                                <span>Mã giao dịch:</span>
-                                <strong>{vnp_TxnRef?.slice(0, 8).toUpperCase()}</strong>
-                            </div>
-                        </div>
-                        <div className={styles.actions}>
-                            <button
-                                className={styles.btnPrimary}
-                                onClick={handleBackToOrder}
-                            >
-                                Xem đơn hàng
-                            </button>
-                            <button
-                                className={styles.btnSecondary}
-                                onClick={handleBackToMenu}
-                            >
-                                Về Menu
-                            </button>
-                        </div>
-                    </div>
-                )}
+//     const handleRetryPayment = () => {
+//         navigate(tableId ? `/payment?table=${tableId}` : '/');
+//     };
 
-                {status === 'failed' && (
-                    <div className={styles.failed}>
-                        <MdError className={styles.icon} />
-                        <h2>Thanh toán thất bại!</h2>
-                        <p className={styles.message}>{message}</p>
-                        <div className={styles.actions}>
-                            <button
-                                className={styles.btnPrimary}
-                                onClick={handleBackToOrder}
-                            >
-                                Thử lại
-                            </button>
-                            <button
-                                className={styles.btnSecondary}
-                                onClick={handleBackToMenu}
-                            >
-                                Về Menu
-                            </button>
-                        </div>
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
+//     return (
+//         <div className={styles.container}>
+//             <div className={styles.card}>
+//                 {status === 'processing' && (
+//                     <div className={styles.processing}>
+//                         <div className={styles.spinner}></div>
+//                         <h2>{message}</h2>
+//                         <p className={styles.subtext}>Vui lòng không tắt trang này...</p>
+//                     </div>
+//                 )}
 
-export default PaymentResult;
+//                 {status === 'success' && (
+//                     <div className={styles.success}>
+//                         <div className={styles.iconWrapper}>
+//                             <MdCheckCircle className={styles.icon} />
+//                         </div>
+//                         <h2>Thanh toán thành công!</h2>
+//                         <p className={styles.message}>Cảm ơn bạn đã thanh toán. Đơn hàng của bạn đã được xác nhận.</p>
+
+//                         <div className={styles.info}>
+//                             <div className={styles.infoRow}>
+//                                 <span>Mã giao dịch:</span>
+//                                 <strong>{vnp_TxnRef?.slice(0, 8).toUpperCase()}</strong>
+//                             </div>
+//                             {tableId && (
+//                                 <div className={styles.infoRow}>
+//                                     <span>Bàn:</span>
+//                                     <strong>{tableId}</strong>
+//                                 </div>
+//                             )}
+//                         </div>
+
+//                         <div className={styles.actions}>
+//                             <button
+//                                 className={styles.btnPrimary}
+//                                 onClick={handleBackToOrder}
+//                             >
+//                                 Xem đơn hàng
+//                             </button>
+//                             <button
+//                                 className={styles.btnSecondary}
+//                                 onClick={handleBackToMenu}
+//                             >
+//                                 Về Menu
+//                             </button>
+//                         </div>
+//                     </div>
+//                 )}
+
+//                 {status === 'failed' && (
+//                     <div className={styles.failed}>
+//                         <div className={styles.iconWrapper}>
+//                             <MdError className={styles.icon} />
+//                         </div>
+//                         <h2>Thanh toán thất bại!</h2>
+//                         <p className={styles.message}>{message}</p>
+
+//                         <div className={styles.actions}>
+//                             <button
+//                                 className={styles.btnPrimary}
+//                                 onClick={handleRetryPayment}
+//                             >
+//                                 Thử lại
+//                             </button>
+//                             <button
+//                                 className={styles.btnSecondary}
+//                                 onClick={handleBackToMenu}
+//                             >
+//                                 Về Menu
+//                             </button>
+//                         </div>
+//                     </div>
+//                 )}
+//             </div>
+//         </div>
+//     );
+// }
+
+// export default PaymentResult;

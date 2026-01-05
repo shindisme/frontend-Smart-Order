@@ -1,11 +1,20 @@
 import { toast } from "react-toastify";
 import styles from "./CartModal.module.css";
 
-function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartItems }) {
-    const isCartEmpty = cartItems.length === 0;
+function CartModal({
+    showCartModal,
+    setShowCartModal,
+    cart = [],
+    setCart,
+    removeItem,
+    updateItem,
+    clearCart,
+    getTotalPrice
+}) {
+    const isCartEmpty = cart.length === 0;
 
     const calculateItemPrice = (item) => {
-        const basePrice = Number(item.basePrice) || 0;
+        const basePrice = Number(item.basePrice) || Number(item.price) || 0;
 
         const optionsPrice = (item.selectedOptions || []).reduce((sum, opt) => {
             return sum + (Number(opt.additionalPrice) || 0);
@@ -14,70 +23,48 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
         return (basePrice + optionsPrice) * item.quantity;
     };
 
-    const handleNoteChange = (itemId, noteValue) => {
-        const updatedItems = cartItems.map(item => {
-            if (item.id === itemId) {
-                return { ...item, note: noteValue };
-            }
-            return item;
-        });
-
-        setCartItems(updatedItems);
+    const handleNoteChange = (index, noteValue) => {
+        const item = cart[index];
+        updateItem(index, { ...item, note: noteValue });
     };
 
-    const handleIncreaseQuantity = (itemId) => {
-        const updatedItems = cartItems.map((item) => {
-            if (item.id === itemId) {
-                const newQuantity = item.quantity + 1;
-                const newItem = {
-                    ...item,
-                    quantity: newQuantity
-                };
-                newItem.totalPrice = calculateItemPrice(newItem);
-                return newItem;
-            }
-            return item;
-        });
-
-        setCartItems(updatedItems);
+    const handleIncreaseQuantity = (index) => {
+        const item = cart[index];
+        const newQuantity = item.quantity + 1;
+        const updatedItem = {
+            ...item,
+            quantity: newQuantity
+        };
+        updatedItem.totalPrice = calculateItemPrice(updatedItem);
+        updateItem(index, updatedItem);
     };
 
-    const handleDecreaseQuantity = (itemId) => {
-        const currentItem = cartItems.find((item) => item.id === itemId);
-        if (!currentItem) return;
+    const handleDecreaseQuantity = (index) => {
+        const item = cart[index];
 
-        if (currentItem.quantity > 1) {
-            const updatedItems = cartItems.map((item) => {
-                if (item.id === itemId) {
-                    const newQuantity = item.quantity - 1;
-                    const newItem = {
-                        ...item,
-                        quantity: newQuantity
-                    };
-                    newItem.totalPrice = calculateItemPrice(newItem);
-                    return newItem;
-                }
-                return item;
-            });
-
-            setCartItems(updatedItems);
+        if (item.quantity > 1) {
+            const newQuantity = item.quantity - 1;
+            const updatedItem = {
+                ...item,
+                quantity: newQuantity
+            };
+            updatedItem.totalPrice = calculateItemPrice(updatedItem);
+            updateItem(index, updatedItem);
         } else {
             const confirmed = window.confirm(
                 "Số lượng đang là 1. Bạn có muốn xóa món này khỏi giỏ hàng không?"
             );
             if (confirmed) {
-                const updatedItems = cartItems.filter((item) => item.id !== itemId);
-                setCartItems(updatedItems);
+                removeItem(index);
             }
         }
     };
 
-    const handleRemoveItem = (itemId) => {
+    const handleRemoveItem = (index) => {
         const confirmed = window.confirm("Bạn có chắc muốn xóa món này khỏi giỏ hàng?");
         if (!confirmed) return;
 
-        const updatedItems = cartItems.filter((item) => item.id !== itemId);
-        setCartItems(updatedItems);
+        removeItem(index);
     };
 
     const handleClearCart = () => {
@@ -89,7 +76,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
         const confirmed = window.confirm("Bạn có chắc muốn xóa toàn bộ giỏ hàng?");
         if (!confirmed) return;
 
-        setCartItems([]);
+        clearCart();
     };
 
     const handleCloseModal = () => {
@@ -98,10 +85,6 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
 
     const formatMoney = (num) => {
         return Number(num).toLocaleString('vi-VN') + 'đ';
-    };
-
-    const getTotalPrice = () => {
-        return cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
     };
 
     return (
@@ -114,7 +97,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
             <div className={`${styles.cartModal} ${showCartModal ? styles.show : ""}`}>
                 <div className={styles.header}>
                     <span className={styles.headerTitle}>
-                        Giỏ hàng {!isCartEmpty && `(${cartItems.length})`}
+                        Giỏ hàng {!isCartEmpty && `(${cart.length})`}
                     </span>
 
                     <div className={styles.headerActions}>
@@ -137,8 +120,8 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                         </div>
                     )}
 
-                    {cartItems.map((item) => (
-                        <div key={item.id} className={styles.cartItem}>
+                    {cart.map((item, index) => (
+                        <div key={`${item.id}-${index}`} className={styles.cartItem}>
                             <img
                                 src={`${import.meta.env.VITE_IMG_URL}${item.imageUrl}`}
                                 alt={item.name}
@@ -151,7 +134,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                     <button
                                         type="button"
                                         className={styles.removeButton}
-                                        onClick={() => handleRemoveItem(item.id)}
+                                        onClick={() => handleRemoveItem(index)}
                                     >
                                         Xóa
                                     </button>
@@ -159,8 +142,8 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
 
                                 {item.selectedOptions && item.selectedOptions.length > 0 && (
                                     <ul className={styles.optionsList}>
-                                        {item.selectedOptions.map((option, index) => (
-                                            <li key={index} className={styles.optionItem}>
+                                        {item.selectedOptions.map((option, optIndex) => (
+                                            <li key={optIndex} className={styles.optionItem}>
                                                 <span className={styles.optionName}>
                                                     {option.optionName}
                                                 </span>
@@ -183,7 +166,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                         <button
                                             type="button"
                                             className={styles.quantityButton}
-                                            onClick={() => handleDecreaseQuantity(item.id)}
+                                            onClick={() => handleDecreaseQuantity(index)}
                                         >
                                             -
                                         </button>
@@ -193,7 +176,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                         <button
                                             type="button"
                                             className={styles.quantityButton}
-                                            onClick={() => handleIncreaseQuantity(item.id)}
+                                            onClick={() => handleIncreaseQuantity(index)}
                                         >
                                             +
                                         </button>
@@ -204,7 +187,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                         placeholder="Ghi chú cho món này..."
                                         className={styles.noteInput}
                                         value={item.note || ""}
-                                        onChange={(e) => handleNoteChange(item.id, e.target.value)}
+                                        onChange={(e) => handleNoteChange(index, e.target.value)}
                                     />
                                 </div>
                             </div>

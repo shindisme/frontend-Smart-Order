@@ -1,5 +1,7 @@
-import { Modal, Button, Card, ListGroup, Badge, Row, Col } from "react-bootstrap";
+import { Modal, Button, Card, Row, Col, Table, Badge } from "react-bootstrap";
 import { FaPrint, FaMoneyBillWave } from "react-icons/fa";
+import { printInvoice } from "../../../../../utils/exportPDFUtil";
+import { toast } from "react-toastify";
 
 function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
     if (!invoice) return null;
@@ -10,29 +12,71 @@ function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
         onClose();
     };
 
+    // ✅ Build allItems từ order.items, lấy đầy đủ tên + options (topping)
+    const allItems = invoice.orders?.flatMap(order =>
+        (order.items || []).map(item => {
+            // Tính đơn giá (nếu có tổng giá đã bao gồm topping, cần chia ra)
+            // Giả sử item.total là tổng với topping, item.price là giá gốc
+            const basePrice = item.price || (item.total / item.quantity);
+
+            return {
+                name: item.name,
+                quantity: item.quantity,
+                price: basePrice,
+                total: item.total,
+                // Lấy options (topping) - backend trả về hoặc tính từ options_order_details
+                options: item.options || item.option_details || []
+            };
+        })
+    ) || [];
+
     const handlePrint = () => {
-        window.print();
+        if (!window.confirm('Xác nhận in hóa đơn?')) return;
+
+        try {
+            const result = printInvoice({
+                invoice_id: invoice.invoice_id,
+                table_name: invoice.table_name,
+                total: invoice.total,
+                discount: invoice.discount || 0,
+                final_total: invoice.final_total,
+                created_at: invoice.created_at,
+                items: allItems // Pass items với options
+            }, {
+                name: 'QUAN KUN GA CHU',
+                address: '180 Cao Lo, Tp. HCM',
+                phone: '0123.456.789'
+            });
+
+            if (result.success) {
+                toast.success('In hóa đơn thành công!');
+            } else {
+                toast.error('Lỗi in hóa đơn!');
+            }
+        } catch (error) {
+            toast.error('Lỗi: ' + error.message);
+        }
     };
 
     return (
         <Modal show={show} onHide={onClose} size="lg" centered>
             <Modal.Header closeButton className="bg-primary text-white">
                 <Modal.Title>
-                    🧾 Hóa đơn #{invoice.invoice_id.slice(0, 8).toUpperCase()}
+                    Hóa đơn #{invoice.invoice_id.slice(0, 13).toUpperCase()}
                 </Modal.Title>
             </Modal.Header>
 
             <Modal.Body>
-                {/* Thông tin chung */}
                 <Card className="mb-3 border-0 bg-light">
                     <Card.Body>
                         <Row>
                             <Col md={6}>
                                 <p className="mb-1"><strong>Bàn:</strong> {invoice.table_name}</p>
-                                <p className="mb-1"><strong>Nhân viên:</strong> {invoice.user_fullname}</p>
                             </Col>
                             <Col md={6}>
-                                <p className="mb-1"><strong>Ngày tạo:</strong> {new Date(invoice.created_at).toLocaleString('vi-VN')}</p>
+                                <p className="mb-1">
+                                    <strong>Ngày:</strong> {new Date(invoice.created_at).toLocaleString('vi-VN')}
+                                </p>
                                 <p className="mb-1">
                                     <strong>Trạng thái:</strong>{' '}
                                     <Badge bg={invoice.status === 1 ? "success" : "warning"}>
@@ -44,35 +88,54 @@ function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
                     </Card.Body>
                 </Card>
 
-                {/* Danh sách món */}
+                {/* Món ăn */}
                 <h6 className="fw-bold mb-3">Chi tiết món ăn</h6>
-                <ListGroup className="mb-3">
-                    {invoice.orders?.map((order, idx) => (
-                        <ListGroup.Item key={idx}>
-                            <div className="mb-2">
-                                <Badge bg="secondary">Order #{order.order_id.slice(0, 8)}</Badge>
-                                <small className="text-muted ms-2">
-                                    {new Date(order.created_at).toLocaleString('vi-VN')}
-                                </small>
-                            </div>
-                            {order.items.map((item, i) => (
-                                <div key={i} className="d-flex justify-content-between ms-3 mb-1">
-                                    <span>{item.quantity}x {item.item_name}</span>
-                                    <span>{new Intl.NumberFormat('vi-VN').format(item.total)}đ</span>
-                                </div>
-                            ))}
-                        </ListGroup.Item>
-                    ))}
-                </ListGroup>
+                <Table striped bordered hover className="mb-3">
+                    <thead className="table-light">
+                        <tr>
+                            <th style={{ width: '50px' }}>STT</th>
+                            <th>Tên món</th>
+                            <th style={{ width: '80px' }} className="text-center">SL</th>
+                            <th style={{ width: '120px' }} className="text-end">Đơn giá</th>
+                            <th style={{ width: '130px' }} className="text-end">Thành tiền</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {allItems.map((item, index) => (
+                            <tr key={index}>
+                                <td className="text-center">{index + 1}</td>
+                                <td>
+                                    <div className="fw-bold">{item.name}</div>
+                                    {/* ✅ Hiển thị topping */}
+                                    {item.options && item.options.length > 0 && (
+                                        <div className="text-muted" style={{ fontSize: '0.85rem', marginTop: '4px' }}>
+                                            {item.options.map((opt, i) => (
+                                                <div key={i}>
+                                                    + {opt.name}
+                                                    {opt.plus_price > 0 && ` (+${new Intl.NumberFormat('vi-VN').format(opt.plus_price)}đ)`}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </td>
+                                <td className="text-center">{item.quantity}</td>
+                                <td className="text-end">
+                                    {new Intl.NumberFormat('vi-VN').format(item.price)}đ
+                                </td>
+                                <td className="text-end fw-bold">
+                                    {new Intl.NumberFormat('vi-VN').format(item.total)}đ
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </Table>
 
                 {/* Coupon */}
                 {invoice.coupon && (
                     <Card className="mb-3 border-success">
                         <Card.Body className="bg-success bg-opacity-10">
                             <p className="mb-0">
-                                🎟️ Mã giảm giá: <strong>{invoice.coupon.code}</strong>
-                                <br />
-                                <small className="text-muted">{invoice.coupon.description}</small>
+                                🎟️ <strong>{invoice.coupon.code}</strong> - {invoice.coupon.description}
                             </p>
                         </Card.Body>
                     </Card>

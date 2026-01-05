@@ -37,7 +37,7 @@
     border-radius: 12px;
     margin-top: 14px;
     margin-bottom: 14px;
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-drop);
 }
 
 .orderRow {
@@ -90,37 +90,12 @@
     margin: 4px 0 0 0;
 }
 
-/* Coupon */
-.cardCoupon {
-    background: #fff;
-    padding: 14px;
-    border-radius: 12px 12px 0 0;
-    margin-bottom: 6px;
-    box-shadow: 0px -2px 4px rgba(0, 0, 0, 0.1);
-    cursor: pointer;
-}
-
-.couponRow {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.couponLeft {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-weight: 600;
-    font-size: 14px;
-    color: var(--text-primary-color);
-}
-
 /* Bill */
 .cardBill {
     background: #fff;
     padding: 14px;
     border-radius: 0 0 12px 12px;
-    box-shadow: 0 4px 4px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--shadow-drop);
     margin-bottom: 16px;
 }
 
@@ -180,7 +155,7 @@
     border: 2px solid #dcdcdc;
     font-size: 14px;
     font-weight: 500;
-    color: #666;
+    color: var(--text-primary-color);
     cursor: pointer;
     transition: all 0.2s;
 }
@@ -211,7 +186,7 @@
     text-shadow: var(--shadow-drop);
     border-radius: 14px;
     border: none;
-    color: #333;
+    color: var(--text-primary-color);
     cursor: pointer;
 }
 
@@ -220,49 +195,6 @@
     cursor: not-allowed;
 }
 
-.cardOldOrder {
-    background: #fff3cd;
-    border: 2px dashed #ffc107;
-    padding: 12px;
-    border-radius: 12px;
-    margin-top: 14px;
-    margin-bottom: 14px;
-}
-
-.oldOrderHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 8px;
-}
-
-.oldOrderHeader h4 {
-    font-size: 14px;
-    font-weight: 700;
-    margin: 0;
-    color: #856404;
-}
-
-.oldOrderBadge {
-    background: #ffc107;
-    color: #856404;
-    padding: 4px 8px;
-    border-radius: 6px;
-    font-size: 12px;
-    font-weight: 600;
-}
-
-.oldOrderRow {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14px;
-    color: #856404;
-}
-
-.oldOrderRow strong {
-    font-weight: 700;
-    font-size: 16px;
-}
 
 .errorPage {
     background: var(--bg-color);

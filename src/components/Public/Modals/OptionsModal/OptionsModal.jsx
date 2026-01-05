@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
+import { toast } from "react-toastify";
 import styles from "./OptionsModal.module.css";
 
-function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
+function OptionsModal({ showModal, setShowModal, selectedItem, addItem }) {
     const [optionGroups, setOptionGroups] = useState([]);
     const [quantity, setQuantity] = useState(1);
 
@@ -28,6 +29,17 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
     };
 
     const handleAddToCart = () => {
+        // Validate: Kiểm tra nhóm bắt buộc
+        const missingRequiredGroup = optionGroups.find(group => {
+            const hasSelection = group.options.some(opt => opt.selected);
+            return group.selectionType === "single" && !hasSelection;
+        });
+
+        if (missingRequiredGroup) {
+            toast.warning(`Vui lòng chọn ${missingRequiredGroup.name}!`);
+            return;
+        }
+
         const selectedOptions = [];
 
         for (let i = 0; i < optionGroups.length; i++) {
@@ -49,10 +61,16 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
 
         const itemId = selectedItem.item_id || selectedItem.data?.item_id || selectedItem.id;
 
+        if (!itemId) {
+            toast.error('Lỗi: Không tìm thấy ID món!');
+            return;
+        }
+
         const cartItem = {
             id: itemId,
             name: selectedItem.name,
             basePrice: Number(selectedItem.price),
+            price: Number(selectedItem.price),
             quantity: quantity,
             imageUrl: selectedItem.img,
             selectedOptions: selectedOptions,
@@ -60,35 +78,32 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
             note: ""
         };
 
-        setCartItems((prevCart) => [...prevCart, cartItem]);
+        addItem(cartItem);
+        toast.success(`Đã thêm vào giỏ hàng!`);
 
+        // reset với đóng modal
         setOptionGroups([]);
         setQuantity(1);
         setShowModal(false);
     };
 
-    const handleToggleOption = (groupId, optionId, selectionType, event) => {
-        if (event) {
-            event.preventDefault();
-            event.stopPropagation();
-        }
-
+    const handleToggleOption = (groupId, optionId, selectionType) => {
         setOptionGroups((prevGroups) => {
-            const newGroups = prevGroups.map((group) => {
+            return prevGroups.map((group) => {
                 if (group.groupId !== groupId) {
                     return group;
                 }
 
                 if (selectionType === "single") {
-                    const updatedOptions = group.options.map((option) => {
-                        return {
-                            ...option,
-                            selected: option.optionId === optionId
-                        };
-                    });
+                    // chonn 1
+                    const updatedOptions = group.options.map((option) => ({
+                        ...option,
+                        selected: option.optionId === optionId
+                    }));
 
                     return { ...group, options: updatedOptions };
                 } else {
+                    // chọn nhiều
                     const updatedOptions = group.options.map((option) => {
                         if (option.optionId === optionId) {
                             return { ...option, selected: !option.selected };
@@ -99,8 +114,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                     return { ...group, options: updatedOptions };
                 }
             });
-
-            return newGroups;
         });
     };
 
@@ -116,6 +129,8 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
 
     const closeModal = () => {
         setShowModal(false);
+        setOptionGroups([]);
+        setQuantity(1);
     };
 
     useEffect(() => {
@@ -139,14 +154,16 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
             const processedOptions = group.options.map((option) => {
                 let shouldSelect = false;
 
+                // Auto-select Size M nếu có
                 if (isSizeGroup && isSingleSelection) {
-                    shouldSelect = option.name.toUpperCase().includes('M');
+                    const optionNameUpper = option.name.toLowerCase();
+                    shouldSelect = optionNameUpper == 'size m'
                 }
 
                 return {
                     ...option,
                     optionId: option.option_id,
-                    additionalPrice: option.plus_price,
+                    additionalPrice: option.plus_price || 0,
                     selected: shouldSelect
                 };
             });
@@ -159,12 +176,13 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
             };
         });
 
+        // Sort: Size lên đầu
         const sortedGroups = processedGroups.sort((a, b) => {
             const isASize = a.name.toLowerCase().includes('size');
             const isBSize = b.name.toLowerCase().includes('size');
 
-            if (isASize) return -1;
-            if (isBSize) return 1;
+            if (isASize && !isBSize) return -1;
+            if (!isASize && isBSize) return 1;
             return 0;
         });
 
@@ -189,6 +207,7 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                         <button
                             className={styles.closeButton}
                             onClick={closeModal}
+                            type="button"
                         >
                             ✕
                         </button>
@@ -213,11 +232,28 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                         </div>
 
                         <div className={styles.quantityControls}>
-                            <button onClick={decrementQuantity}>-</button>
+                            <button
+                                onClick={decrementQuantity}
+                                type="button"
+                                disabled={quantity <= 1}
+                            >
+                                -
+                            </button>
                             <span>{quantity}</span>
-                            <button onClick={incrementQuantity}>+</button>
+                            <button
+                                onClick={incrementQuantity}
+                                type="button"
+                            >
+                                +
+                            </button>
                         </div>
                     </div>
+
+                    {optionGroups.length === 0 && (
+                        <p style={{ textAlign: 'center', color: '#999', padding: '20px' }}>
+                            Món này không có tùy chọn
+                        </p>
+                    )}
 
                     {optionGroups.map((group) => (
                         <div key={group.groupId} className={styles.optionGroup}>
@@ -236,22 +272,16 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                                 <label
                                     key={option.optionId}
                                     className={`${styles.optionRow} ${option.selected ? styles.selected : ''}`}
-                                    onClick={(e) =>
-                                        handleToggleOption(
-                                            group.groupId,
-                                            option.optionId,
-                                            group.selectionType,
-                                            e
-                                        )
-                                    }
                                 >
                                     <div className={styles.optionInfo}>
                                         <span className={styles.optionName}>
                                             {option.name}
                                         </span>
-                                        <p className={styles.optionPrice}>
-                                            +{formatMoneyVND(option.additionalPrice)}
-                                        </p>
+                                        {option.additionalPrice > 0 && (
+                                            <p className={styles.optionPrice}>
+                                                +{formatMoneyVND(option.additionalPrice)}
+                                            </p>
+                                        )}
                                     </div>
 
                                     {group.selectionType === "single" ? (
@@ -259,15 +289,25 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
                                             type="radio"
                                             name={`group-${group.groupId}`}
                                             checked={option.selected || false}
-                                            onChange={() => { }}
-                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={() =>
+                                                handleToggleOption(
+                                                    group.groupId,
+                                                    option.optionId,
+                                                    group.selectionType
+                                                )
+                                            }
                                         />
                                     ) : (
                                         <input
                                             type="checkbox"
                                             checked={option.selected || false}
-                                            onChange={() => { }}
-                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={() =>
+                                                handleToggleOption(
+                                                    group.groupId,
+                                                    option.optionId,
+                                                    group.selectionType
+                                                )
+                                            }
                                         />
                                     )}
                                 </label>
@@ -278,6 +318,7 @@ function OptionsModal({ showModal, setShowModal, selectedItem, setCartItems }) {
 
                 <div className={styles.footer}>
                     <button
+                        type="button"
                         className={styles.addToCartButton}
                         onClick={handleAddToCart}
                     >

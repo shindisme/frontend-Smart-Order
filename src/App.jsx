@@ -26,7 +26,7 @@ function App() {
     <BrowserRouter>
       <ToastContainer
         position="top-right"
-        autoClose={5000}
+        autoClose={1500}
         hideProgressBar={false}
         newestOnTop={false}
         closeOnClick={false}
@@ -35,6 +35,7 @@ function App() {
         draggable
         pauseOnHover
         theme="colored"
+        limit={3}
         transition={Bounce}
       />
       <Routes>
@@ -42,7 +43,7 @@ function App() {
         {/* public*/}
         <Route path="/" element={<PublicLayout />} />
         <Route path="/order-confirm" element={<OrderConfirm />} />
-        <Route path="/payment-method" element={<Payment />} />
+        <Route path="/payment" element={<Payment />} />
         <Route path="/order-status" element={<OrderStatus />} />
         <Route path="/order" element={<OrderTracking />} />
 
