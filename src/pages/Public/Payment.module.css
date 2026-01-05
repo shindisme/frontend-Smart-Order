@@ -1,0 +1,245 @@
+.container {
+    min-height: 100vh;
+    background: var(--bg-color);
+    padding-bottom: 100px;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: white;
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.backBtn {
+    background: transparent;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    color: var(--text-primary-color);
+}
+
+.header h3 {
+    flex: 1;
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-primary-color);
+}
+
+.loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+}
+
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #f3f3f3;
+    border-top: 4px solid var(--primary-color);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.main {
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.invoiceCard {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.invoiceCard h4 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary-color);
+}
+
+.invoiceRow {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    color: var(--text-secondary-color);
+}
+
+.invoiceRow span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.invoiceRow strong {
+    color: var(--text-primary-color);
+    font-weight: 600;
+}
+
+.divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: 12px 0;
+}
+
+.discount {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.invoiceTotal {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0 0 0;
+    border-top: 2px solid var(--border-color);
+    margin-top: 8px;
+}
+
+.invoiceTotal span {
+    font-size: 16px;
+    color: var(--text-primary-color);
+}
+
+.invoiceTotal strong {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.methodsSection h4 {
+    margin: 0 0 16px 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary-color);
+}
+
+.methodsGrid {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.methodCard {
+    background: white;
+    border: 2px solid var(--border-color);
+    border-radius: 12px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.methodCard:hover {
+    border-color: var(--primary-color);
+    transform: translateY(-2px);
+}
+
+.methodCard.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #fff 0%, #fef3f2 100%);
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.2);
+}
+
+.methodIcon {
+    width: 50px;
+    height: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #f9fafb;
+    border-radius: 12px;
+    flex-shrink: 0;
+    color: var(--text-secondary-color);
+}
+
+.methodCard.selected .methodIcon {
+    background: rgba(255, 107, 107, 0.1);
+    color: var(--primary-color);
+}
+
+.methodInfo {
+    flex: 1;
+}
+
+.methodInfo h5 {
+    margin: 0 0 4px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-primary-color);
+}
+
+.methodInfo p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary-color);
+}
+
+.radioWrapper input[type="radio"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+.footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    border-top: 1px solid var(--border-color);
+    padding: 16px;
+    box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.payButton {
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--gradient-button);
+    color: white;
+    transition: transform 0.2s;
+}
+
+.payButton:hover:not(:disabled) {
+    transform: translateY(-2px);
+}
+
+.payButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}

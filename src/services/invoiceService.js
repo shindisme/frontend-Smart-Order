@@ -11,12 +11,18 @@ const invoiceService = {
         return res.data;
     },
 
+    getByTableId: async (table_id) => {
+        const res = await api.get('/invoices', {
+            params: { table_id }
+        });
+        return res.data;
+    },
+
     getPendingOrders: async (table_id) => {
         const res = await api.get(`/invoices/pending-orders/${table_id}`);
         return res.data;
     },
 
-    // ✅ FIX: Dùng query params
     getPendingByTable: async (table_id) => {
         const res = await api.get('/invoices/pending', {
             params: { table_id }

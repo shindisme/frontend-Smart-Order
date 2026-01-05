@@ -96,7 +96,7 @@ function CouponManage() {
 
     const data = paginatedCoupons.map((coupon, index) => ({
         stt: (currentPage - 1) * itemsPerPage + index + 1,
-        code: <strong className="text-primary">{coupon.code}</strong>,
+        code: <strong className="text-danger">{coupon.code}</strong>,
         description: coupon.description || '—',
         type: <Badge bg={coupon.type === 0 ? "info" : "warning"}>
             {coupon.type === 0 ? "Giảm %" : "Giảm tiền"}

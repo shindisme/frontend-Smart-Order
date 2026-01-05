@@ -77,18 +77,18 @@ function InvoiceManage() {
     // Dữ liệu hiển thị
     const data = paginatedInvoices.map((invoice, index) => ({
         stt: (currentPage - 1) * itemsPerPage + index + 1,
-        invoice_code: <strong className="text-primary">#{invoice.invoice_id.slice(0, 8).toUpperCase()}</strong>,
-        table: <Badge bg="info">{invoice.table_name}</Badge>,
+        invoice_code: <strong className="text-danger">#{invoice.invoice_id.slice(0, 8).toUpperCase()}</strong>,
+        table: invoice.table_name,
         total: `${new Intl.NumberFormat('vi-VN').format(invoice.total)}đ`,
         discount: invoice.discount > 0 ? (
-            <span className="text-danger">-{new Intl.NumberFormat('vi-VN').format(invoice.discount)}đ</span>
-        ) : '—',
+            <span className="text-danger">{new Intl.NumberFormat('vi-VN').format(invoice.discount)}đ</span>
+        ) : '0đ',
         final_total: <strong className="text-success">{new Intl.NumberFormat('vi-VN').format(invoice.final_total)}đ</strong>,
         status: <Badge bg={invoice.status === 1 ? "success" : "warning"}>{invoice.status === 1 ? "Đã thanh toán" : "Chưa thanh toán"}</Badge>,
         created_at: new Date(invoice.created_at).toLocaleString('vi-VN'),
         actions: invoice.status === 0 && (
-            <Button size="sm" variant="success" onClick={() => handlePay(invoice.invoice_id)}>
-                💳 Thanh toán
+            <Button size="sm" variant="warning" onClick={() => handlePay(invoice.invoice_id)}>
+                Thanh toán
             </Button>
         ),
         fullData: invoice
@@ -100,7 +100,7 @@ function InvoiceManage() {
         <>
             {/* Thanh tìm kiếm + filter */}
             <TopBar
-                onAdd={() => setShowCreateModal(true)}
+                onAdd={null}
                 onSearch={setSearchTerm}
                 onRefresh={handleRefresh}
                 filterOptions={[
@@ -117,15 +117,10 @@ function InvoiceManage() {
                 onFilter={setFilters}
             />
 
-            {/* Tiêu đề + nút tạo */}
             <div className="d-flex justify-content-between align-items-center mb-4">
                 <h2>
-                    <FaFileInvoiceDollar className="me-2" />
                     Danh sách hóa đơn
                 </h2>
-                <Button variant="primary" size="lg" onClick={() => setShowCreateModal(true)}>
-                    + Tạo hóa đơn mới
-                </Button>
             </div>
 
             {/* Bảng data */}

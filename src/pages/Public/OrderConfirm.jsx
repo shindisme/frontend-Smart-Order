@@ -107,9 +107,6 @@ function OrderConfirm() {
         setIsSubmitting(true);
 
         try {
-            // ✅ LOG TOÀN BỘ CART
-            console.log('📦 Items từ cart:', items);
-
             let invoice = JSON.parse(localStorage.getItem('currentInvoice') || 'null');
 
             if (!invoice?.invoice_id && oldInvoice) {
@@ -140,53 +137,26 @@ function OrderConfirm() {
                 localStorage.setItem('currentInvoice', JSON.stringify(invoice));
             }
 
-            const orderItems = items.map((item, index) => {
-                // ✅ LOG TỪNG ITEM
-                console.log(`📝 Processing item ${index}:`, item);
-                console.log(`   - item.id: ${item.id}`);
-                console.log(`   - item.itemId: ${item.itemId}`);
-                console.log(`   - item.item_id: ${item.item_id}`);
-
+            const orderItems = items.map((item) => {
                 const itemId = item.id || item.itemId || item.item_id;
 
                 if (!itemId) {
-                    console.error('❌ Item thiếu ID:', item);
                     throw new Error(`Món "${item.name}" thiếu thông tin ID`);
                 }
 
-                // ✅ LOG OPTIONS
-                console.log(`   - selectedOptions:`, item.selectedOptions);
-
                 const validOptions = (item.selectedOptions || [])
-                    .map((opt, optIndex) => {
-                        console.log(`      Option ${optIndex}:`, opt);
-                        console.log(`        - optionId: ${opt.optionId}`);
-                        console.log(`        - option_id: ${opt.option_id}`);
-
-                        return {
-                            option_id: opt.optionId || opt.option_id
-                        };
-                    })
+                    .map((opt) => ({
+                        option_id: opt.optionId || opt.option_id
+                    }))
                     .filter(opt => opt.option_id);
 
-                const orderItem = {
+                return {
                     item_id: itemId,
                     quantity: item.quantity,
                     total: item.totalPrice,
                     note: item.note || null,
                     options: validOptions
                 };
-
-                console.log(`✅ OrderItem ${index}:`, orderItem);
-                return orderItem;
-            });
-
-            console.log('🚀 Payload gửi lên backend:', {
-                invoice_id: invoice.invoice_id,
-                table_id: tableId,
-                user_id: null,
-                items: orderItems,
-                note: null
             });
 
             await orderService.create({
@@ -197,22 +167,16 @@ function OrderConfirm() {
                 note: null
             });
 
-            // ✅ CHUYỂN TRẠNG THÁI BÀN SANG "ĐANG SỬ DỤNG" (state = 1)
             try {
                 await tableService.update(tableId, { state: 1 });
-                console.log('✅ Đã chuyển trạng thái bàn sang Đang sử dụng');
             } catch (tableError) {
-                console.error('⚠️ Lỗi cập nhật trạng thái bàn:', tableError);
-                // Không throw error vì order đã tạo thành công
+                toast.warning('Lỗi cập nhật trạng thái bàn');
             }
 
             localStorage.removeItem('guestCart');
             toast.success('Đơn hàng đã được gửi!');
             navigate(`/order?table=${tableId}`);
         } catch (error) {
-            console.error('❌ Error creating order:', error);
-            console.error('❌ Error response:', error.response?.data);
-
             const errorMsg = error.response?.data?.error || error.response?.data?.message || error.message;
 
             if (errorMsg.includes('không còn tồn tại') || errorMsg.includes('không tồn tại')) {

@@ -190,3 +190,62 @@
 .addToCartButton:hover {
     opacity: 0.9;
 }
+
+.optionRow {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    background: var(--bg-color);
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+    /* ✅ Prevent text selection */
+}
+
+.optionRow:hover {
+    border-color: var(--primary-color);
+    background: #fef3f2;
+}
+
+/* ✅ THÊM STYLE KHI SELECTED */
+.optionRow.selected {
+    border-color: var(--primary-color);
+    background: linear-gradient(135deg, #fff 0%, #fef3f2 100%);
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+.optionRow input[type="radio"],
+.optionRow input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+    flex-shrink: 0;
+    /* ✅ Đảm bảo pointer events */
+    pointer-events: auto;
+}
+
+.optionInfo {
+    flex: 1;
+    margin-right: 12px;
+    /* ✅ Prevent pointer events conflict */
+    pointer-events: none;
+}
+
+.optionName {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--text-primary-color);
+}
+
+.optionPrice {
+    margin: 0;
+    font-size: 13px;
+    color: var(--primary-color);
+    font-weight: 500;
+}

@@ -1,7 +1,18 @@
+import { toast } from "react-toastify";
 import styles from "./CartModal.module.css";
 
 function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartItems }) {
     const isCartEmpty = cartItems.length === 0;
+
+    const calculateItemPrice = (item) => {
+        const basePrice = Number(item.basePrice) || 0;
+
+        const optionsPrice = (item.selectedOptions || []).reduce((sum, opt) => {
+            return sum + (Number(opt.additionalPrice) || 0);
+        }, 0);
+
+        return (basePrice + optionsPrice) * item.quantity;
+    };
 
     const handleNoteChange = (itemId, noteValue) => {
         const updatedItems = cartItems.map(item => {
@@ -17,10 +28,13 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
     const handleIncreaseQuantity = (itemId) => {
         const updatedItems = cartItems.map((item) => {
             if (item.id === itemId) {
-                return {
+                const newQuantity = item.quantity + 1;
+                const newItem = {
                     ...item,
-                    quantity: item.quantity + 1,
+                    quantity: newQuantity
                 };
+                newItem.totalPrice = calculateItemPrice(newItem);
+                return newItem;
             }
             return item;
         });
@@ -35,10 +49,13 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
         if (currentItem.quantity > 1) {
             const updatedItems = cartItems.map((item) => {
                 if (item.id === itemId) {
-                    return {
+                    const newQuantity = item.quantity - 1;
+                    const newItem = {
                         ...item,
-                        quantity: item.quantity - 1,
+                        quantity: newQuantity
                     };
+                    newItem.totalPrice = calculateItemPrice(newItem);
+                    return newItem;
                 }
                 return item;
             });
@@ -65,7 +82,7 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
 
     const handleClearCart = () => {
         if (isCartEmpty) {
-            alert("Giỏ hàng đang trống.");
+            toast.warn("Giỏ hàng đang trống.");
             return;
         }
 
@@ -79,19 +96,26 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
         setShowCartModal(false);
     };
 
+    const formatMoney = (num) => {
+        return Number(num).toLocaleString('vi-VN') + 'đ';
+    };
+
+    const getTotalPrice = () => {
+        return cartItems.reduce((sum, item) => sum + (item.totalPrice || 0), 0);
+    };
+
     return (
         <>
-            {/* Overlay */}
             <div
                 className={`${styles.overlay} ${showCartModal ? styles.show : ""}`}
                 onClick={handleCloseModal}
             />
 
-            {/* Cart Modal */}
             <div className={`${styles.cartModal} ${showCartModal ? styles.show : ""}`}>
-                {/* Header */}
                 <div className={styles.header}>
-                    <span className={styles.headerTitle}>Giỏ hàng</span>
+                    <span className={styles.headerTitle}>
+                        Giỏ hàng {!isCartEmpty && `(${cartItems.length})`}
+                    </span>
 
                     <div className={styles.headerActions}>
                         {!isCartEmpty && (
@@ -106,7 +130,6 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                     </div>
                 </div>
 
-                {/* Cart Items List */}
                 <div className={styles.cartList}>
                     {isCartEmpty && (
                         <div className={styles.emptyMessage}>
@@ -116,14 +139,12 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
 
                     {cartItems.map((item) => (
                         <div key={item.id} className={styles.cartItem}>
-                            {/* Item Image */}
                             <img
                                 src={`${import.meta.env.VITE_IMG_URL}${item.imageUrl}`}
                                 alt={item.name}
                                 className={styles.itemImage}
                             />
 
-                            {/* Item Info */}
                             <div className={styles.itemInfo}>
                                 <div className={styles.itemHeader}>
                                     <div className={styles.itemName}>{item.name}</div>
@@ -136,7 +157,6 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                     </button>
                                 </div>
 
-                                {/* Selected Options */}
                                 {item.selectedOptions && item.selectedOptions.length > 0 && (
                                     <ul className={styles.optionsList}>
                                         {item.selectedOptions.map((option, index) => (
@@ -144,12 +164,20 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                                                 <span className={styles.optionName}>
                                                     {option.optionName}
                                                 </span>
+                                                {option.additionalPrice > 0 && (
+                                                    <span className={styles.optionPrice}>
+                                                        +{formatMoney(option.additionalPrice)}
+                                                    </span>
+                                                )}
                                             </li>
                                         ))}
                                     </ul>
                                 )}
 
-                                {/* Controls */}
+                                <div className={styles.itemPrice}>
+                                    {formatMoney(item.totalPrice)}
+                                </div>
+
                                 <div className={styles.itemControls}>
                                     <div className={styles.quantityControls}>
                                         <button
@@ -184,8 +212,13 @@ function CartModal({ showCartModal, setShowCartModal, cartItems = [], setCartIte
                     ))}
                 </div>
 
-                {/* Footer */}
                 <div className={styles.footer}>
+                    {!isCartEmpty && (
+                        <div className={styles.totalSection}>
+                            <span>Tổng cộng:</span>
+                            <strong>{formatMoney(getTotalPrice())}</strong>
+                        </div>
+                    )}
                     <button
                         type="button"
                         className={styles.closeButton}

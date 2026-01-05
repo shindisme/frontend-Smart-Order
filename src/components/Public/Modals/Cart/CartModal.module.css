@@ -124,7 +124,6 @@
     cursor: pointer;
 }
 
-/* Options List */
 .optionsList {
     list-style: none;
     padding: 0;
@@ -141,7 +140,6 @@
     margin-left: 3px;
 }
 
-/* Item Controls */
 .itemControls {
     display: flex;
     justify-content: space-between;
@@ -206,4 +204,79 @@
     font-weight: 600;
     font-size: 15px;
     cursor: pointer;
+}
+
+.itemPrice {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary-color);
+    margin: 8px 0;
+}
+
+.optionsList {
+    list-style: none;
+    padding: 0;
+    margin: 8px 0;
+}
+
+.optionItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-secondary-color);
+    padding: 4px 0;
+}
+
+.optionName {
+    flex: 1;
+}
+
+.optionPrice {
+    color: var(--primary-color);
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.totalSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-top: 1px solid var(--border-color);
+    margin-bottom: 12px;
+}
+
+.totalSection span {
+    font-size: 16px;
+    color: var(--text-secondary-color);
+}
+
+.totalSection strong {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.footer {
+    padding: 16px;
+    background: #fff;
+    border-top: 1px solid var(--border-color);
+}
+
+.closeButton {
+    width: 100%;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    background: var(--gradient-button);
+    color: #fff;
+    transition: transform 0.2s;
+}
+
+.closeButton:hover {
+    transform: translateY(-2px);
 }

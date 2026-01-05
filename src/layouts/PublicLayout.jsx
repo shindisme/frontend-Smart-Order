@@ -58,10 +58,6 @@ function PublicLayout() {
             try {
                 const res = await tableService.getById(tableId);
 
-                // ✅ Debug: Xem cấu trúc response
-                console.log("🔍 API Response:", res);
-
-                // ✅ Xử lý cả 2 trường hợp
                 if (res && res.data && res.data.table_id) {
                     localStorage.setItem("table_id", res.data.table_id);
                 } else if (res && res.table_id) {

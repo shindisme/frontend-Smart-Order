@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { IoArrowUndoSharp } from "react-icons/io5";
-
 import orderService from '../../services/orderService';
 import invoiceService from '../../services/invoiceService';
 import {
@@ -13,8 +12,7 @@ import {
     MdTableRestaurant,
     MdReceiptLong,
     MdHourglassEmpty,
-    MdRestaurant,
-    MdOutlinePayment
+    MdRestaurant
 } from 'react-icons/md';
 import ConfirmModal from '../../components/Public/Modals/ConfirmModal/ConfirmModal';
 import styles from './OrderTracking.module.css';
@@ -28,7 +26,6 @@ function OrderTracking() {
     const [invoice, setInvoice] = useState(null);
     const [showCancelModal, setShowCancelModal] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState(null);
 
     useEffect(() => {
         if (!tableId) {
@@ -36,14 +33,12 @@ function OrderTracking() {
             return;
         }
         loadOrders();
-        loadPaymentMethod();
     }, [tableId]);
 
     const loadOrders = async () => {
         try {
             setLoading(true);
 
-            // ✅ LẤY TẤT CẢ ORDERS CỦA BÀN (CẢ ĐÃ THANH TOÁN)
             const ordersRes = await orderService.getByTableId(tableId);
 
             if (ordersRes?.data) {
@@ -61,27 +56,24 @@ function OrderTracking() {
                 setOrders(ordersWithDetails);
             }
 
-            // ✅ LẤY INVOICE PENDING TRƯỚC
             try {
                 const pendingInvoiceRes = await invoiceService.getPendingByTable(tableId);
                 if (pendingInvoiceRes?.data) {
                     setInvoice(pendingInvoiceRes.data);
                 }
             } catch (err) {
-                // ✅ KHÔNG CÓ PENDING, THỬ LẤY INVOICE ĐÃ THANH TOÁN GẦN NHẤT
                 if (err.response?.status === 404) {
                     try {
                         const allInvoicesRes = await invoiceService.getByTableId(tableId);
                         if (allInvoicesRes?.data && allInvoicesRes.data.length > 0) {
-                            // Lấy invoice mới nhất
                             const latestInvoice = allInvoicesRes.data[0];
                             setInvoice(latestInvoice);
                         }
                     } catch (invoiceErr) {
-                        console.error('Error loading invoices:', invoiceErr);
+                        if (invoiceErr.response?.status !== 404) {
+                            toast.error('Lỗi tải hóa đơn');
+                        }
                     }
-                } else {
-                    console.error('Error loading invoice:', err);
                 }
             }
         } catch (error) {
@@ -93,60 +85,12 @@ function OrderTracking() {
         }
     };
 
-    const loadPaymentMethod = () => {
-        try {
-            const saved = localStorage.getItem('selectedPaymentMethod');
-            if (saved) {
-                const method = JSON.parse(saved);
-                setSelectedPaymentMethod(method);
-            }
-        } catch (err) {
-            console.error('Error loading payment method:', err);
-        }
-    };
-
     const handleAddMore = () => {
         navigate(`/?table=${tableId}`);
     };
 
-    const handleChoosePayment = () => {
-        navigate(`/payment-method?table=${tableId}`);
-    };
-
-    const handlePayNow = async () => {
-        if (!invoice?.invoice_id) {
-            toast.error('Không có hóa đơn để thanh toán!');
-            return;
-        }
-
-        if (!selectedPaymentMethod) {
-            toast.warning('Vui lòng chọn phương thức thanh toán!');
-            navigate(`/payment-method?table=${tableId}`);
-            return;
-        }
-
-        try {
-            if (selectedPaymentMethod.id === 'vnpay') {
-                toast.info('Đang chuyển đến cổng thanh toán VNPay...');
-                window.location.href = `https://sandbox.vnpayment.vn/paymentv2/vpcpay.html?vnp_Amount=${invoice.final_total * 100}&vnp_TxnRef=${invoice.invoice_id}`;
-            } else if (selectedPaymentMethod.id === 'momo') {
-                toast.info('Đang chuyển đến ví Momo...');
-            } else if (selectedPaymentMethod.id === 'bank') {
-                toast.success('Vui lòng chuyển khoản theo thông tin đã gửi!');
-            } else if (selectedPaymentMethod.id === 'cash') {
-                await invoiceService.pay(invoice.invoice_id);
-                toast.success('Đã xác nhận thanh toán tiền mặt!');
-
-                // ✅ XÓA LOCALSTORAGE SAU KHI THANH TOÁN
-                localStorage.removeItem('currentInvoice');
-                localStorage.removeItem('guestCart');
-                localStorage.removeItem('selectedPaymentMethod');
-
-                loadOrders();
-            }
-        } catch (error) {
-            toast.error('Lỗi khi thanh toán: ' + (error.response?.data?.message || error.message));
-        }
+    const handleGoToPayment = () => {
+        navigate(`/payment?table=${tableId}`);
     };
 
     const handleCancelConfirm = async () => {
@@ -159,29 +103,20 @@ function OrderTracking() {
                 return;
             }
 
-            // ✅ XÓA ORDERS TRƯỚC
-            console.log('🗑️ Đang xóa orders:', pendingOrders.map(o => o.order_id));
-
             await Promise.all(
                 pendingOrders.map(order => orderService.delete(order.order_id))
             );
 
-            // ✅ KIỂM TRA CÒN ORDERS NÀO KHÔNG
             const remainingOrders = orders.filter(o => o.state !== 0);
 
             if (remainingOrders.length === 0 && invoice?.invoice_id && invoice.status === 0) {
-                // ✅ CHỈ XÓA INVOICE NẾU KHÔNG CÒN ORDERS VÀ CHƯA THANH TOÁN
                 try {
-                    console.log('🗑️ Đang xóa invoice:', invoice.invoice_id);
                     await invoiceService.delete(invoice.invoice_id);
-                    console.log('✅ Đã xóa invoice');
                 } catch (invoiceError) {
-                    console.error('❌ Lỗi xóa invoice:', invoiceError.response?.data);
                     toast.warning('Đơn hàng đã hủy nhưng hóa đơn chưa xóa được. Vui lòng liên hệ nhân viên!');
                 }
             }
 
-            // ✅ XÓA LOCALSTORAGE
             localStorage.removeItem('currentInvoice');
             localStorage.removeItem('guestCart');
             localStorage.removeItem('selectedPaymentMethod');
@@ -189,14 +124,12 @@ function OrderTracking() {
             toast.success('Đã hủy đơn hàng chờ xử lý');
             setShowCancelModal(false);
 
-            // ✅ RELOAD HOẶC NAVIGATE
             if (remainingOrders.length === 0) {
                 navigate(`/?table=${tableId}`);
             } else {
                 loadOrders();
             }
         } catch (error) {
-            console.error('❌ Error:', error);
             toast.error(error.response?.data?.message || error.message || 'Lỗi khi hủy đơn');
         }
     };
@@ -389,43 +322,28 @@ function OrderTracking() {
             </div>
 
             <div className={styles.footer}>
-                {isPaid ? (
+                {!isPaid ? (
                     <>
-                        <div className={styles.thankYou}>
-                            <MdCheckCircle className={styles.thankYouIcon} />
-                            <h3>Cảm ơn bạn!</h3>
-                            <p>Đơn hàng đã thanh toán thành công</p>
-                        </div>
-                        <button className={styles.btnSecondary} onClick={handleAddMore}>
-                            Về Menu
+                        <button
+                            className={styles.btnPrimary}
+                            onClick={handleGoToPayment}
+                        >
+                            <MdPayment /> Thanh toán
                         </button>
+
+                        {hasPendingOrders && (
+                            <button
+                                className={styles.btnDanger}
+                                onClick={() => setShowCancelModal(true)}
+                            >
+                                <MdCancel /> Hủy đơn chưa xác nhận
+                            </button>
+                        )}
                     </>
                 ) : (
-                    <>
-                        <div className={styles.footerTop}>
-                            <button className={styles.btnOutline} onClick={handleChoosePayment}>
-                                <MdOutlinePayment /> Chọn thanh toán
-                            </button>
-                            {hasPendingOrders && (
-                                <button
-                                    className={styles.btnDanger}
-                                    onClick={() => setShowCancelModal(true)}
-                                >
-                                    <MdCancel /> Hủy đơn chưa xác nhận
-                                </button>
-                            )}
-                        </div>
-
-                        {selectedPaymentMethod && (
-                            <div className={styles.selectedMethod}>
-                                Phương thức: <strong>{selectedPaymentMethod.parentName || selectedPaymentMethod.name}</strong>
-                            </div>
-                        )}
-
-                        <button className={styles.btnPrimary} onClick={handlePayNow}>
-                            <MdPayment /> Thanh toán ngay
-                        </button>
-                    </>
+                    <button className={styles.btnSecondary} onClick={handleAddMore}>
+                        Về Menu
+                    </button>
                 )}
             </div>
 

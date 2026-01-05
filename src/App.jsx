@@ -10,7 +10,7 @@ import StaffManage from "./pages/Admin/StaffManage";
 import TableManage from "./pages/Admin/TableManage";
 
 import OrderConfirm from "./pages/Public/OrderConfirm";
-import PaymentMethod from "./pages/Public/PaymentMethod";
+import Payment from "./pages/Public/Payment";
 import OrderStatus from "./pages/Public/OrderStatus";
 import OrderTracking from "./pages/Public/OrderTracking";
 import Login from "./pages/Admin/Login";
@@ -42,7 +42,7 @@ function App() {
         {/* public*/}
         <Route path="/" element={<PublicLayout />} />
         <Route path="/order-confirm" element={<OrderConfirm />} />
-        <Route path="/payment-method" element={<PaymentMethod />} />
+        <Route path="/payment-method" element={<Payment />} />
         <Route path="/order-status" element={<OrderStatus />} />
         <Route path="/order" element={<OrderTracking />} />
 
