@@ -158,27 +158,43 @@ function StaffManage() {
     };
 
     const handleCU = async (formData) => {
+        let success = false;
+
         try {
             if (mode === "create") {
                 const res = await staffService.insert(formData);
-                toast.success(res.message);
 
-                setPasswordData({
-                    username: res.data.username,
-                    password: res.data.password,
-                    fullname: res.data.fullname
-                });
-                setShowPasswordModal(true);
+                toast.success(res.message || 'Thêm nhân viên thành công!');
+
+                if (res.data && res.data.username && res.data.password) {
+                    setPasswordData({
+                        username: res.data.username,
+                        password: res.data.password,
+                        fullname: res.data.fullname
+                    });
+                    setShowPasswordModal(true);
+                }
+
+                success = true;
             } else if (mode === "update") {
                 const res = await staffService.update(selectedStaff.user_id, formData);
-                toast.success(res.message);
-            }
 
-            refetch();
-            setShowModal(false);
+                toast.success(res.message || 'Cập nhật nhân viên thành công!');
+                success = true;
+            }
         } catch (error) {
-            console.error(error);
-            toast.error(error.response?.data?.message || "Có lỗi xảy ra");
+            const errorMessage = error.response?.data?.message ||
+                error.response?.data?.error ||
+                error.message ||
+                "Có lỗi xảy ra";
+
+            toast.error(errorMessage);
+        } finally {
+            await refetch();
+
+            if (success) {
+                setShowModal(false);
+            }
         }
     };
 
