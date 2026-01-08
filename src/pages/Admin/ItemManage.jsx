@@ -5,6 +5,7 @@ import Pagination from "../../components/common/Pagination";
 import itemService from '../../services/itemService';
 import categoryService from "../../services/categoryService";
 import optionGroupService from "../../services/optionGroupService";
+import authService from "../../services/authService";
 import ModalCRUItem from "../../components/Admin/Content/Modals/ModalCRU/ModalCRU.Item";
 import ModalConfirm from "../../components/Admin/Content/Modals/ModalConfirmDelete/ModalConfirm";
 import { toast } from "react-toastify";
@@ -13,6 +14,9 @@ import { exportItemsToExcel } from "../../utils/exportExcelUtil";
 import { useFetch } from "../../hooks/useFetch";
 
 function ItemManage() {
+    const user = authService.getCurrentUser();
+    const isAdmin = user?.role === 'admin';
+
     const { data: items, loading: loadingItems, refetch: refetchItems } = useFetch(itemService);
     const { data: categories, loading: loadingCategories } = useFetch(categoryService);
     const { data: groups, loading: loadingGroups } = useFetch(optionGroupService);
@@ -196,10 +200,10 @@ function ItemManage() {
     return (
         <>
             <TopBar
-                onAdd={handleSetCreate}
+                onAdd={isAdmin ? handleSetCreate : null}
                 onSearch={handleSearch}
                 onRefresh={handleRefresh}
-                onExportExcel={handleExportExcel}
+                onExportExcel={isAdmin ? handleExportExcel : null}
                 filterOptions={filterOptions}
                 onFilter={handleFilter}
             />
@@ -208,8 +212,8 @@ function ItemManage() {
                 columns={columns}
                 data={itemData}
                 onRead={handleSetRead}
-                onUpdate={handleSetUpdate}
-                onDelete={handleOpenDeleteModal}
+                onUpdate={isAdmin ? handleSetUpdate : null}
+                onDelete={isAdmin ? handleOpenDeleteModal : null}
             />
 
             <Pagination
@@ -220,23 +224,27 @@ function ItemManage() {
                 onItemsPerPageChange={setItemsPerPage}
             />
 
-            <ModalCRUItem
-                show={showModal}
-                mode={mode}
-                categories={categories}
-                groups={groups}
-                data={selectedItem}
-                onClose={() => setShowModal(false)}
-                onSubmit={handleCU}
-            />
+            {(isAdmin || mode === "read") && (
+                <ModalCRUItem
+                    show={showModal}
+                    mode={mode}
+                    categories={categories}
+                    groups={groups}
+                    data={selectedItem}
+                    onClose={() => setShowModal(false)}
+                    onSubmit={handleCU}
+                />
+            )}
 
-            <ModalConfirm
-                show={showDeleteModal}
-                title="Xác nhận xóa món"
-                message={`Bạn có chắc muốn xóa "${itemToDelete?.name}"?`}
-                onClose={() => setShowDeleteModal(false)}
-                onConfirm={handleConfirmDelete}
-            />
+            {isAdmin && (
+                <ModalConfirm
+                    show={showDeleteModal}
+                    title="Xác nhận xóa món"
+                    message={`Bạn có chắc muốn xóa "${itemToDelete?.name}"?`}
+                    onClose={() => setShowDeleteModal(false)}
+                    onConfirm={handleConfirmDelete}
+                />
+            )}
         </>
     );
 }

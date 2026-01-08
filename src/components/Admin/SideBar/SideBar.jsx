@@ -111,7 +111,7 @@ function SideBar({ setCollapsed, collapsed }) {
             {!isAdmin && (
               <MenuItem icon={<FaConciergeBell size={sizeIcon} />} onClick={handleMenuClick}>
                 Xem sản phẩm
-                <NavLink to="items-view" />
+                <NavLink to="items-manage" />
               </MenuItem>
             )}
 
