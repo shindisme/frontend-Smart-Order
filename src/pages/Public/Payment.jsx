@@ -8,7 +8,7 @@ import { RiCoupon2Line } from 'react-icons/ri';
 import { MdTableRestaurant, MdReceiptLong } from 'react-icons/md';
 import { BiMoney, BiWallet } from 'react-icons/bi';
 import invoiceService from '../../services/invoiceService';
-import { CartStorage } from '../../utils/cartStorage';
+import { CartStorage, MyOrders } from '../../utils/cartStorage';  // ← THÊM MyOrders
 import CouponModal from '../../components/Public/Modals/CouponModal/CouponModal';
 import styles from './Payment.module.css';
 import { IoIosArrowForward } from "react-icons/io";
@@ -38,7 +38,6 @@ function Payment() {
     const [appliedCoupon, setAppliedCoupon] = useState(null);
     const [showCouponModal, setShowCouponModal] = useState(false);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [isProcessing, setIsProcessing] = useState(false);
 
     useEffect(() => {
@@ -55,29 +54,73 @@ function Payment() {
     const loadInvoice = async () => {
         try {
             setLoading(true);
-            setError(null);
+
+            // ✅ LẤY order_ids từ localStorage
+            const myOrderIds = MyOrders.getOrderIds();
+            console.log('📋 My order IDs in Payment:', myOrderIds);
+
+            if (myOrderIds.length === 0) {
+                console.log('⚠️ Không có order_id, redirect về menu');
+                toast.warning('Chưa có đơn hàng nào');
+                setTimeout(() => navigate(`/?table=${tableId}`), 1000);
+                return;
+            }
 
             const invoicesRes = await invoiceService.getAll();
 
             if (invoicesRes?.data) {
-                const pending = invoicesRes.data.find(
-                    inv => String(inv.table_id) === String(tableId) && inv.status === 0
+                const tableInvoices = invoicesRes.data.filter(inv =>
+                    String(inv.table_id) === String(tableId)
                 );
 
-                if (pending) {
-                    const detailRes = await invoiceService.getById(pending.invoice_id);
-                    setInvoice(detailRes?.data || pending);
-                } else {
-                    setError('Không tìm thấy hóa đơn chưa thanh toán');
-                    toast.error('Không tìm thấy hóa đơn chưa thanh toán');
-                    setTimeout(() => navigate(`/order?table=${tableId}`), 1500);
+                console.log('📦 Table invoices:', tableInvoices);
+
+                // ✅ LOAD DETAIL + FILTER theo myOrderIds
+                for (const inv of tableInvoices) {
+                    try {
+                        const detailRes = await invoiceService.getById(inv.invoice_id);
+
+                        if (detailRes?.data && detailRes.data.orders) {
+                            // Filter orders có order_id trong myOrderIds
+                            const myOrders = detailRes.data.orders.filter(order =>
+                                myOrderIds.includes(order.order_id)
+                            );
+
+                            console.log(`Invoice ${inv.invoice_id}: ${myOrders.length} orders của tôi`);
+
+                            // Tìm invoice chưa thanh toán (status=0) có orders của mình
+                            if (myOrders.length > 0 && detailRes.data.status === 0) {
+                                // Tính lại total (chỉ orders của mình)
+                                const myTotal = myOrders.reduce((sum, order) => {
+                                    const orderTotal = order.items?.reduce((s, item) => s + item.total, 0) || 0;
+                                    return sum + orderTotal;
+                                }, 0);
+
+                                console.log('✅ Found pending invoice:', detailRes.data.invoice_id);
+
+                                setInvoice({
+                                    ...detailRes.data,
+                                    orders: myOrders,
+                                    total: myTotal,
+                                    final_total: myTotal
+                                });
+
+                                setLoading(false);
+                                return; // Tìm thấy rồi, dừng lại
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Error loading invoice detail:', err);
+                    }
                 }
-            } else {
-                throw new Error('No data in response');
+
+                // Không tìm thấy invoice pending
+                console.log('⚠️ Không tìm thấy pending invoice');
+                toast.warning('Không có hóa đơn cần thanh toán');
+                setTimeout(() => navigate(`/order?table=${tableId}`), 1500);
             }
         } catch (error) {
             console.error('Error loading invoice:', error);
-            setError(error.message || 'Lỗi tải hóa đơn');
             toast.error('Lỗi tải hóa đơn');
             setTimeout(() => navigate(`/order?table=${tableId}`), 2000);
         } finally {
@@ -176,6 +219,14 @@ function Payment() {
             setIsProcessing(true);
 
             await invoiceService.pay(invoice.invoice_id, couponCode || null);
+
+            // ✅ XÓA order_ids đã thanh toán khỏi localStorage
+            if (invoice.orders) {
+                invoice.orders.forEach(order => {
+                    MyOrders.removeOrderId(order.order_id);
+                });
+            }
+
             CartStorage.clearCart(tableId);
             localStorage.removeItem('selectedPaymentMethod');
 
@@ -210,7 +261,6 @@ function Payment() {
         return (num || 0).toLocaleString('vi-VN') + 'đ';
     };
 
-    // ✅ THÊM LOADING STATE
     if (loading) {
         return (
             <div className={styles.container}>
@@ -221,16 +271,12 @@ function Payment() {
         );
     }
 
-    // ✅ THÊM ERROR STATE
-    if (error || !invoice) {
+    // ✅ Nếu không có invoice sau khi load → Đã redirect rồi
+    if (!invoice) {
         return (
             <div className={styles.container}>
-                <div className={styles.error}>
-                    <h2>Có lỗi xảy ra</h2>
-                    <p>{error || 'Không tìm thấy hóa đơn'}</p>
-                    <button className={styles.btnPrimary} onClick={() => navigate(`/order?table=${tableId}`)}>
-                        Quay lại đơn hàng
-                    </button>
+                <div className={styles.loading}>
+                    <p>Đang chuyển hướng...</p>
                 </div>
             </div>
         );

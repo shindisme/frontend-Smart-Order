@@ -29,7 +29,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, addItem }) {
     };
 
     const handleAddToCart = () => {
-        // Validate: Kiểm tra nhóm bắt buộc
         const missingRequiredGroup = optionGroups.find(group => {
             const hasSelection = group.options.some(opt => opt.selected);
             return group.selectionType === "single" && !hasSelection;
@@ -154,7 +153,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, addItem }) {
             const processedOptions = group.options.map((option) => {
                 let shouldSelect = false;
 
-                // Auto-select Size M nếu có
                 if (isSizeGroup && isSingleSelection) {
                     const optionNameUpper = option.name.toLowerCase();
                     shouldSelect = optionNameUpper == 'size m'
@@ -176,7 +174,6 @@ function OptionsModal({ showModal, setShowModal, selectedItem, addItem }) {
             };
         });
 
-        // Sort: Size lên đầu
         const sortedGroups = processedGroups.sort((a, b) => {
             const isASize = a.name.toLowerCase().includes('size');
             const isBSize = b.name.toLowerCase().includes('size');
