@@ -1,4 +1,3 @@
-/* Header */
 .header {
     display: flex;
     align-items: center;
@@ -21,7 +20,6 @@
     color: var(--text-primary-color);
 }
 
-/* Main */
 .main {
     padding: 0 12px;
     max-width: 430px;
@@ -30,7 +28,6 @@
     min-height: calc(100vh - 160px);
 }
 
-/* Order Card */
 .cardOrder {
     background: #fff;
     padding: 14px;
@@ -90,7 +87,6 @@
     margin: 4px 0 0 0;
 }
 
-/* Bill */
 .cardBill {
     background: #fff;
     padding: 14px;
@@ -128,7 +124,6 @@
     color: var(--text-orange-color);
 }
 
-/* Footer */
 .footer {
     padding: 12px;
     max-width: 430px;

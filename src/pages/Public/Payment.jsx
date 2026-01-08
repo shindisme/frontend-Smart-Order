@@ -1,5 +1,3 @@
-// src/pages/Payment/Payment.jsx
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -8,7 +6,7 @@ import { RiCoupon2Line } from 'react-icons/ri';
 import { MdTableRestaurant, MdReceiptLong } from 'react-icons/md';
 import { BiMoney, BiWallet } from 'react-icons/bi';
 import invoiceService from '../../services/invoiceService';
-import { CartStorage, MyOrders } from '../../utils/cartStorage';  // ← THÊM MyOrders
+import { CartStorage, MyOrders } from '../../utils/cartStorage';
 import CouponModal from '../../components/Public/Modals/CouponModal/CouponModal';
 import styles from './Payment.module.css';
 import { IoIosArrowForward } from "react-icons/io";
@@ -55,12 +53,9 @@ function Payment() {
         try {
             setLoading(true);
 
-            // ✅ LẤY order_ids từ localStorage
             const myOrderIds = MyOrders.getOrderIds();
-            console.log('📋 My order IDs in Payment:', myOrderIds);
 
             if (myOrderIds.length === 0) {
-                console.log('⚠️ Không có order_id, redirect về menu');
                 toast.warning('Chưa có đơn hàng nào');
                 setTimeout(() => navigate(`/?table=${tableId}`), 1000);
                 return;
@@ -73,30 +68,20 @@ function Payment() {
                     String(inv.table_id) === String(tableId)
                 );
 
-                console.log('📦 Table invoices:', tableInvoices);
-
-                // ✅ LOAD DETAIL + FILTER theo myOrderIds
                 for (const inv of tableInvoices) {
                     try {
                         const detailRes = await invoiceService.getById(inv.invoice_id);
 
                         if (detailRes?.data && detailRes.data.orders) {
-                            // Filter orders có order_id trong myOrderIds
                             const myOrders = detailRes.data.orders.filter(order =>
                                 myOrderIds.includes(order.order_id)
                             );
 
-                            console.log(`Invoice ${inv.invoice_id}: ${myOrders.length} orders của tôi`);
-
-                            // Tìm invoice chưa thanh toán (status=0) có orders của mình
                             if (myOrders.length > 0 && detailRes.data.status === 0) {
-                                // Tính lại total (chỉ orders của mình)
                                 const myTotal = myOrders.reduce((sum, order) => {
                                     const orderTotal = order.items?.reduce((s, item) => s + item.total, 0) || 0;
                                     return sum + orderTotal;
                                 }, 0);
-
-                                console.log('✅ Found pending invoice:', detailRes.data.invoice_id);
 
                                 setInvoice({
                                     ...detailRes.data,
@@ -106,21 +91,19 @@ function Payment() {
                                 });
 
                                 setLoading(false);
-                                return; // Tìm thấy rồi, dừng lại
+                                return;
                             }
                         }
                     } catch (err) {
-                        console.error('Error loading invoice detail:', err);
+                        console.error('Lỗi:', err);
                     }
                 }
 
-                // Không tìm thấy invoice pending
-                console.log('⚠️ Không tìm thấy pending invoice');
                 toast.warning('Không có hóa đơn cần thanh toán');
                 setTimeout(() => navigate(`/order?table=${tableId}`), 1500);
             }
         } catch (error) {
-            console.error('Error loading invoice:', error);
+            console.error('Lỗi:', error);
             toast.error('Lỗi tải hóa đơn');
             setTimeout(() => navigate(`/order?table=${tableId}`), 2000);
         } finally {
@@ -135,7 +118,7 @@ function Payment() {
                 setSelectedMethod(JSON.parse(saved));
             }
         } catch (error) {
-            console.error('Error loading saved method:', error);
+            console.error('Lỗi:', error);
         }
     };
 
@@ -220,13 +203,6 @@ function Payment() {
 
             await invoiceService.pay(invoice.invoice_id, couponCode || null);
 
-            // ✅ XÓA order_ids đã thanh toán khỏi localStorage
-            if (invoice.orders) {
-                invoice.orders.forEach(order => {
-                    MyOrders.removeOrderId(order.order_id);
-                });
-            }
-
             CartStorage.clearCart(tableId);
             localStorage.removeItem('selectedPaymentMethod');
 
@@ -271,7 +247,6 @@ function Payment() {
         );
     }
 
-    // ✅ Nếu không có invoice sau khi load → Đã redirect rồi
     if (!invoice) {
         return (
             <div className={styles.container}>

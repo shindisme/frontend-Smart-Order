@@ -1,11 +1,9 @@
-// src/pages/OrderConfirm/OrderConfirm.jsx
-
 import { useEffect, useState } from 'react';
 import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCart } from '../../hooks/useCart';
 import orderService from '../../services/orderService';
-import { MyOrders } from '../../utils/cartStorage';  // ← IMPORT MyOrders
+import { MyOrders } from '../../utils/cartStorage';
 import styles from './OrderConfirm.module.css';
 import { IoArrowUndoSharp } from "react-icons/io5";
 
@@ -54,7 +52,6 @@ function OrderConfirm() {
                 };
             });
 
-            // ✅ GỌI API TẠO ORDER
             const response = await orderService.create({
                 table_id: tableId,
                 user_id: null,
@@ -62,16 +59,12 @@ function OrderConfirm() {
                 note: null
             });
 
-            console.log('📦 Response:', response);
-
-            // ✅ LƯU order_id VÀO localStorage
             const orderId = response.data?.order_id || response.order_id;
 
             if (orderId) {
                 MyOrders.addOrderId(orderId);
-                console.log('✅ Đã lưu order_id:', orderId);
             } else {
-                console.error('❌ Không có order_id trong response:', response);
+                console.error('Lỗi:', response);
             }
 
             clearCart();

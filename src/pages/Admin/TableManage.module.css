@@ -183,7 +183,6 @@
     border-color: #fee2e2;
 }
 
-/* RESPONSIVE */
 @media (min-width: 640px) {
     .tableGrid {
         grid-template-columns: repeat(2, 1fr);

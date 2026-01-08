@@ -4,7 +4,6 @@ export function printInvoice(orderData, restaurantInfo = {}) {
     try {
         const items = orderData.items || [];
 
-        // ============ TÍNH CHIỀU CAO ĐỘNG ============
         let totalContentHeight = 0;
 
         items.forEach((item) => {
@@ -51,7 +50,7 @@ export function printInvoice(orderData, restaurantInfo = {}) {
 
         doc.setFont('Courier');
 
-        // ============ HEADER ============
+        // header
         doc.setFontSize(12);
         doc.setFont('Courier', 'bold');
         const name = convertVietnamese(restaurantInfo.name || 'QUAN AN');
@@ -70,7 +69,7 @@ export function printInvoice(orderData, restaurantInfo = {}) {
         doc.setDrawColor(0);
         doc.line(5, 22, 75, 22);
 
-        // ============ THÔNG TIN ĐƠN ============
+        // content
         doc.setFontSize(8);
         const now = new Date(orderData.created_at || Date.now());
         const dateStr = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()}`;
@@ -83,7 +82,6 @@ export function printInvoice(orderData, restaurantInfo = {}) {
 
         doc.line(5, 38, 75, 38);
 
-        // ============ ITEMS HEADER ============
         let y = 42;
         doc.setFont('Courier', 'bold');
         doc.setFontSize(8);
@@ -96,7 +94,6 @@ export function printInvoice(orderData, restaurantInfo = {}) {
         doc.line(5, y, 75, y);
         y += 4;
 
-        // ============ ITEMS LIST ============
         doc.setFont('Courier', 'normal');
         doc.setFontSize(7);
 
@@ -141,7 +138,6 @@ export function printInvoice(orderData, restaurantInfo = {}) {
                     const optPrice = parseFloat(opt.plus_price) || 0;
 
                     optLines.forEach((optLine, idx) => {
-                        // In tên topping
                         doc.text(optLine, 12, currentY);
 
                         if (idx === 0 && optPrice > 0) {
@@ -179,7 +175,7 @@ export function printInvoice(orderData, restaurantInfo = {}) {
             y += Math.max(totalItemHeight, 4) + 1;
         });
 
-        // ============ TỔNG TIỀN ============
+        // tính tổng
         y += 1;
         doc.line(5, y, 75, y);
         y += 4;
@@ -189,7 +185,6 @@ export function printInvoice(orderData, restaurantInfo = {}) {
         doc.text('Tong cong:', 5, y);
         doc.text(formatMoney(totalAmount), 62, y);
 
-        // ============ GIẢM GIÁ ============
         let discount = parseFloat(orderData.discount) || 0;
         if (discount > 0) {
             y += 4;
@@ -199,7 +194,7 @@ export function printInvoice(orderData, restaurantInfo = {}) {
             doc.text('-' + formatMoney(discount), 62, y);
         }
 
-        // ============ THÀNH TIỀN ============
+        // thàn tiền
         y += 4;
         doc.setFont('Courier', 'bold');
         doc.setFontSize(10);
@@ -207,14 +202,12 @@ export function printInvoice(orderData, restaurantInfo = {}) {
         doc.text('THANH TIEN:', 5, y);
         doc.text(formatMoney(finalTotal), 62, y);
 
-        // ============ FOOTER ============
         y += 8;
         doc.setFont('Courier', 'normal');
         doc.setFontSize(8);
         doc.text('Cam on quy khach!', 40, y, { align: 'center' });
         doc.text('Hen gap lai!', 40, y + 4, { align: 'center' });
 
-        // ============ SAVE ============
         const fileName = `HoaDon_${orderData.table_name}_${Date.now()}.pdf`;
         doc.save(fileName);
 

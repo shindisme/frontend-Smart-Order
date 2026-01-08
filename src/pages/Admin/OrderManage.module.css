@@ -6,7 +6,6 @@
     min-height: 100vh;
 }
 
-/* Header */
 .header {
     background: white;
     border-radius: 12px;
@@ -108,7 +107,6 @@
     box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25);
 }
 
-/* Order Grid */
 .orderGrid {
     display: grid;
     grid-template-columns: 1fr;
@@ -126,7 +124,6 @@
     font-size: 14px;
 }
 
-/* Order Card */
 .orderCard {
     background: white;
     border-radius: 12px;
@@ -274,7 +271,6 @@
     margin-top: 8px;
 }
 
-/* RESPONSIVE */
 @media (min-width: 640px) {
     .orderGrid {
         grid-template-columns: repeat(2, 1fr);

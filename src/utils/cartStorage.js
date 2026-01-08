@@ -1,5 +1,3 @@
-// src/utils/cartStorage.js
-
 export const getSessionId = () => {
     const key = 'userSessionId';
     let sessionId = localStorage.getItem(key);
@@ -12,56 +10,122 @@ export const getSessionId = () => {
     return sessionId;
 };
 
-// ✅ THÊM: Quản lý danh sách order_id của user này
 export const MyOrders = {
-    // Lưu order_id vừa tạo
     addOrderId: (orderId) => {
         try {
             const key = 'myOrderIds';
+            const timestampKey = 'orderTimestamps';
+
             const existing = localStorage.getItem(key);
             const orderIds = existing ? JSON.parse(existing) : [];
 
+            const timestamps = JSON.parse(localStorage.getItem(timestampKey) || '{}');
+
             if (!orderIds.includes(orderId)) {
                 orderIds.push(orderId);
+                timestamps[orderId] = Date.now();
+
                 localStorage.setItem(key, JSON.stringify(orderIds));
+                localStorage.setItem(timestampKey, JSON.stringify(timestamps));
+
             }
         } catch (error) {
-            console.error('Lỗi addOrderId:', error);
+            console.error('Lỗi:', error);
         }
     },
 
-    // Lấy danh sách order_id của mình
     getOrderIds: () => {
         try {
+            MyOrders.cleanOldOrders();
+
             const key = 'myOrderIds';
             const existing = localStorage.getItem(key);
             return existing ? JSON.parse(existing) : [];
         } catch (error) {
-            console.error('Lỗi getOrderIds:', error);
+            console.error('Lỗi:', error);
             return [];
         }
     },
 
-    // Xóa order_id (khi hủy)
-    removeOrderId: (orderId) => {
+    cleanOldOrders: () => {
         try {
             const key = 'myOrderIds';
-            const existing = localStorage.getItem(key);
-            const orderIds = existing ? JSON.parse(existing) : [];
+            const timestampKey = 'orderTimestamps';
 
-            const filtered = orderIds.filter(id => id !== orderId);
-            localStorage.setItem(key, JSON.stringify(filtered));
+            const orderIds = JSON.parse(localStorage.getItem(key) || '[]');
+            const timestamps = JSON.parse(localStorage.getItem(timestampKey) || '{}');
+
+            const now = Date.now();
+            const twoHours = 2 * 60 * 60 * 1000;
+
+            const validOrderIds = orderIds.filter(orderId => {
+                const timestamp = timestamps[orderId];
+                if (!timestamp) return false;
+
+                const age = now - timestamp;
+                return age < twoHours;
+            });
+
+            const validTimestamps = {};
+            validOrderIds.forEach(orderId => {
+                if (timestamps[orderId]) {
+                    validTimestamps[orderId] = timestamps[orderId];
+                }
+            });
+
+            localStorage.setItem(key, JSON.stringify(validOrderIds));
+            localStorage.setItem(timestampKey, JSON.stringify(validTimestamps));
+
         } catch (error) {
-            console.error('Lỗi removeOrderId:', error);
+            console.error('Lỗi:', error);
         }
     },
 
-    // Xóa tất cả
+    removeOrderId: (orderId) => {
+        try {
+            const key = 'myOrderIds';
+            const timestampKey = 'orderTimestamps';
+
+            const existing = localStorage.getItem(key);
+            const orderIds = existing ? JSON.parse(existing) : [];
+
+            const timestamps = JSON.parse(localStorage.getItem(timestampKey) || '{}');
+
+            const filtered = orderIds.filter(id => id !== orderId);
+            delete timestamps[orderId];
+
+            localStorage.setItem(key, JSON.stringify(filtered));
+            localStorage.setItem(timestampKey, JSON.stringify(timestamps));
+        } catch (error) {
+            console.error('Lỗi:', error);
+        }
+    },
+
     clearOrderIds: () => {
         try {
             localStorage.removeItem('myOrderIds');
+            localStorage.removeItem('orderTimestamps');
         } catch (error) {
-            console.error('Lỗi clearOrderIds:', error);
+            console.error('Lỗi:', error);
+        }
+    },
+
+    getRemainingTime: (orderId) => {
+        try {
+            const timestampKey = 'orderTimestamps';
+            const timestamps = JSON.parse(localStorage.getItem(timestampKey) || '{}');
+
+            const timestamp = timestamps[orderId];
+            if (!timestamp) return 0;
+
+            const now = Date.now();
+            const twoHours = 2 * 60 * 60 * 1000;
+            const age = now - timestamp;
+            const remaining = twoHours - age;
+
+            return Math.max(0, Math.floor(remaining / 1000 / 60));
+        } catch (error) {
+            return 0;
         }
     }
 };
@@ -93,7 +157,7 @@ export const CartStorage = {
 
             return JSON.parse(cart);
         } catch (error) {
-            console.error('Lỗi getCart:', error);
+            console.error('Lỗi:', error);
             return [];
         }
     },
@@ -106,7 +170,7 @@ export const CartStorage = {
             localStorage.setItem(key, JSON.stringify(cart));
             localStorage.setItem(timestampKey, Date.now().toString());
         } catch (error) {
-            console.error('Lỗi setCart:', error);
+            console.error('Lỗi:', error);
         }
     },
 
@@ -118,7 +182,7 @@ export const CartStorage = {
             localStorage.removeItem(key);
             localStorage.removeItem(timestampKey);
         } catch (error) {
-            console.error('Lỗi clearCart:', error);
+            console.error('Lỗi:', error);
         }
     },
 
@@ -131,7 +195,7 @@ export const CartStorage = {
                 }
             });
         } catch (error) {
-            console.error('Lỗi clearAllCarts:', error);
+            console.error('Lỗi:', error);
         }
     },
 

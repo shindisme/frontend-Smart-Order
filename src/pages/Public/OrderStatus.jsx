@@ -9,13 +9,11 @@ function OrderStatus() {
     const [orderData, setOrderData] = useState(null);
 
     useEffect(() => {
-        // Load order data from localStorage or API
         const pendingOrder = localStorage.getItem('pendingOrder');
 
         if (pendingOrder) {
             setOrderData(JSON.parse(pendingOrder));
         } else {
-            // Nếu không có order, redirect về home
             setTimeout(() => {
                 navigate('/');
             }, 3000);

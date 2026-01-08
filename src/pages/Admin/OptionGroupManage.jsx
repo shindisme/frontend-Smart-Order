@@ -11,7 +11,6 @@ import { exportOptionGroupToExcel } from "../../utils/exportExcelUtil";
 import { useFetch } from "../../hooks/useFetch";
 
 function OptionGroupManage() {
-    // Hook fetch data
     const { data: optionGroups, loading, refetch } = useFetch(optionGroupService);
 
     // State

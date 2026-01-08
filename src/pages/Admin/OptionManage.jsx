@@ -12,11 +12,10 @@ import { exportOptionToExcel } from "../../utils/exportExcelUtil";
 import { useFetch } from '../../hooks/useFetch';
 
 function OptionManage() {
-    // Hook fetch data
     const { data: options, loading: loadingOptions, refetch: refetchOptions } = useFetch(optionService);
     const { data: groups, loading: loadingGroups } = useFetch(optionGroupService);
 
-    // State
+    // state
     const [filteredOptions, setFilteredOptions] = useState([]);
     const [paginatedOptions, setPaginatedOptions] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
@@ -30,7 +29,7 @@ function OptionManage() {
     const [showModalConfirm, setShowModalConfirm] = useState(false);
     const [mode, setMode] = useState('read');
 
-    // Filter
+    // filter
     useEffect(() => {
         let result = options;
 
@@ -49,14 +48,14 @@ function OptionManage() {
         setCurrentPage(1);
     }, [searchTerm, filters, options]);
 
-    // Paginate
+    // paginate
     useEffect(() => {
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
         setPaginatedOptions(filteredOptions.slice(startIndex, endIndex));
     }, [filteredOptions, currentPage, itemsPerPage]);
 
-    // Handlers
+    // handlers
     const handleSearch = (value) => setSearchTerm(value);
     const handleFilter = (filterValues) => setFilters(filterValues);
 

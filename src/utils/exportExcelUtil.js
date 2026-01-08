@@ -31,9 +31,8 @@ export function exportToExcel(data, columns, fileName) {
         const exportData = formatExportData(data, columns);
         const ws = XLSX.utils.json_to_sheet(exportData);
 
-        // Cấu hình độ rộng cột
         const colWidths = [
-            { wch: 5 }, // STT
+            { wch: 5 },
             ...columns.map(col => ({
                 wch: Math.max(col.header.length + 5, 15)
             }))
@@ -105,7 +104,6 @@ export function exportOptionGroupToExcel(groups) {
 }
 
 export function exportCouponToExcel(coupons) {
-    // Transform data trước khi export
     const transformedData = coupons.map(coupon => ({
         code: coupon.code,
         description: coupon.description || '',
