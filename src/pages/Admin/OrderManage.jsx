@@ -56,7 +56,7 @@ function OrderManage() {
             const result = await orderService.getAll();
             setOrders(result.data || result);
         } catch (error) {
-            console.error('Error fetching orders:', error);
+            console.error('Lỗi', error);
             toast.error('Lỗi tải dữ liệu đơn hàng');
             setOrders([]);
         }
@@ -67,7 +67,7 @@ function OrderManage() {
             const result = await tableService.getAll();
             setTables(result.data || result);
         } catch (error) {
-            console.error('Error fetching tables:', error);
+            console.error('Lỗi: ', error);
             setTables([]);
         }
     };
@@ -100,11 +100,11 @@ function OrderManage() {
     const handleUpdateStatus = async (orderId, newState) => {
         try {
             const res = await orderService.updateState(orderId, newState);
-            toast.success(res.message || 'Cập nhật trạng thái thành công');
+            toast.success(res.message);
             fetchOrders();
         } catch (error) {
-            console.error('Error updating order state:', error);
-            toast.error(error.response?.data?.message || 'Lỗi cập nhật trạng thái');
+            console.error('Lỗi:', error);
+            toast.error('Lỗi cập nhật trạng thái');
         }
     };
 
@@ -115,7 +115,7 @@ function OrderManage() {
 
     const getTableName = (tableId) => {
         const table = tables.find(t => t.table_id === tableId);
-        return table ? table.name : 'N/A';
+        return table?.name ?? 'N/A';
     };
 
     const getOrderCount = (status) => {
@@ -183,7 +183,7 @@ function OrderManage() {
                                     </div>
                                     <div className={styles.orderHeaderInfo}>
                                         <h3 className={styles.orderCode}>
-                                            #{order.order_id.slice(0, 8).toUpperCase()}
+                                            #{order.order_id.slice(0, 13).toUpperCase()}
                                         </h3>
                                         <p className={styles.orderTable}>
                                             Bàn: {getTableName(order.table_id)}

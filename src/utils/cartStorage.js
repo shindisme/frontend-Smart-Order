@@ -1,43 +1,39 @@
 export const CartStorage = {
-    // Tạo key theo tableId
-    getKey: (tableId) => `guestCart_${tableId}`,
-    getTimestampKey: (tableId) => `guestCart_${tableId}_timestamp`,
+    getKey: () => 'guestCart',
+    getTimestampKey: () => 'guestCart_timestamp',
 
-    // Lấy giỏ hàng (kiểm tra thời gian)
-    getCart: (tableId, expirationHours = 4) => {
+    getCart: (expirationHours = 3) => {
         try {
-            const key = CartStorage.getKey(tableId);
-            const timestampKey = CartStorage.getTimestampKey(tableId);
+            const key = CartStorage.getKey();
+            const timestampKey = CartStorage.getTimestampKey();
 
             const cart = localStorage.getItem(key);
             const timestamp = localStorage.getItem(timestampKey);
 
             if (!cart) return [];
 
-            // Kiểm tra time
             if (timestamp) {
                 const savedTime = parseInt(timestamp);
                 const now = Date.now();
                 const hoursPassed = (now - savedTime) / (1000 * 60 * 60);
 
                 if (hoursPassed > expirationHours) {
-                    CartStorage.clearCart(tableId);
+                    CartStorage.clearCart();
                     return [];
                 }
             }
 
             return JSON.parse(cart);
         } catch (error) {
-            console.error('Lỗi', error);
+            console.error('Lỗi:', error);
             return [];
         }
     },
 
-    // Lưu giỏ hàng
-    setCart: (tableId, cart) => {
+    setCart: (cart) => {
         try {
-            const key = CartStorage.getKey(tableId);
-            const timestampKey = CartStorage.getTimestampKey(tableId);
+            const key = CartStorage.getKey();
+            const timestampKey = CartStorage.getTimestampKey();
 
             localStorage.setItem(key, JSON.stringify(cart));
             localStorage.setItem(timestampKey, Date.now().toString());
@@ -46,43 +42,39 @@ export const CartStorage = {
         }
     },
 
-    // Xóa giỏ hàng theo table
-    clearCart: (tableId) => {
+    clearCart: () => {
         try {
-            const key = CartStorage.getKey(tableId);
-            const timestampKey = CartStorage.getTimestampKey(tableId);
+            const key = CartStorage.getKey();
+            const timestampKey = CartStorage.getTimestampKey();
 
             localStorage.removeItem(key);
             localStorage.removeItem(timestampKey);
         } catch (error) {
-            console.error('Lỗi', error);
+            console.error('Lỗi clearCart:', error);
         }
     },
 
-    // Xóa tất cả giỏ hàng cũ
     clearAllCarts: () => {
         try {
             const keys = Object.keys(localStorage);
             keys.forEach(key => {
-                if (key.startsWith('guestCart_')) {
+                if (key.startsWith('guestCart')) {
                     localStorage.removeItem(key);
                 }
             });
         } catch (error) {
-            console.error('Lỗi', error);
+            console.error('Lỗi clearAllCarts:', error);
         }
     },
 
-    // Kiểm tra có cart không
-    hasCart: (tableId) => {
-        const key = CartStorage.getKey(tableId);
+    hasCart: () => {
+        const key = CartStorage.getKey();
         return localStorage.getItem(key) !== null;
     },
 
-    // Lấy thời gian còn lại (phút)
-    getRemainingTime: (tableId, expirationHours = 4) => {
+    getRemainingTime: (expirationHours = 4) => {
         try {
-            const timestampKey = CartStorage.getTimestampKey(tableId);
+            const timestampKey = CartStorage.getTimestampKey();
             const timestamp = localStorage.getItem(timestampKey);
 
             if (!timestamp) return 0;

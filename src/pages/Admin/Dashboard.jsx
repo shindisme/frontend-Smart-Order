@@ -83,16 +83,6 @@ function Dashboard() {
     return null;
   };
 
-  if (loading) {
-    return (
-      <div className={styles.loadingContainer}>
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Đang tải...</span>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div className={styles.dashboard}>
       <div className={styles.header}>

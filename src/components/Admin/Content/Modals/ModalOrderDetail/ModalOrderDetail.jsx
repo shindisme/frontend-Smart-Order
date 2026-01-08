@@ -18,10 +18,9 @@ function ModalOrderDetail({ show, order, onClose, onUpdateStatus, onRefresh }) {
         setLoading(true);
         try {
             const res = await orderService.getById(order.order_id);
-            console.log('Order detail response:', res.data);
             setOrderDetail(res.data);
         } catch (error) {
-            console.error('Error fetching order detail:', error);
+            console.error('Lỗi: ', error);
             toast.error('Lỗi tải chi tiết đơn hàng');
         } finally {
             setLoading(false);
@@ -59,25 +58,18 @@ function ModalOrderDetail({ show, order, onClose, onUpdateStatus, onRefresh }) {
         return orderDetail.items.reduce((sum, item) => sum + Number(item.total || 0), 0);
     };
 
-    if (loading) {
-        return (
-            <Modal show={show} onHide={onClose} centered>
-                <Modal.Body className="text-center py-5">
-                    <div className="spinner-border text-primary" />
-                </Modal.Body>
-            </Modal>
-        );
-    }
-
     if (!orderDetail) return null;
 
     return (
         <Modal show={show} onHide={onClose} centered size="lg">
-            <Modal.Header className="bg-primary text-white">
+            <Modal.Header className="bg-primary text-white d-flex justify-content-between align-items-center">
                 <div>
                     <Modal.Title>Chi tiết đơn hàng</Modal.Title>
-                    <small>#{orderDetail.order_id.slice(0, 8).toUpperCase()}</small>
+                    <p className="mb-0">
+                        #{orderDetail.order_id.slice(0, 13).toUpperCase()}
+                    </p>
                 </div>
+
                 <Button variant="light" size="sm" onClick={onClose}>
                     <MdClose />
                 </Button>

@@ -16,7 +16,7 @@ function PublicLayout() {
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
 
-    const { cart, setCart, addItem, removeItem, updateItem, clearCart, getTotalPrice, getItemCount } = useCart(tableId);
+    const { cart, setCart, addItem, removeItem, updateItem, clearCart, getTotalPrice, getItemCount } = useCart(4);
 
     const [activeCategoryId, setActiveCategoryId] = useState('0');
     const [selectedItem, setSelectedItem] = useState(null);

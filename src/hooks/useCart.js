@@ -1,34 +1,28 @@
-// src/hooks/useCart.js
-
 import { useState, useEffect } from 'react';
 import { CartStorage } from '../utils/cartStorage';
 
-export function useCart(tableId, expirationHours) {
-    const [cart, setCart] = useState(() => CartStorage.getCart(tableId || '', expirationHours));
+export function useCart(expirationHours = 4) {
+    const [cart, setCart] = useState(() => CartStorage.getCart(expirationHours));
 
     useEffect(() => {
-        if (!tableId) return;
-
-        const savedCart = CartStorage.getCart(tableId, expirationHours);
+        const savedCart = CartStorage.getCart(expirationHours);
         setCart(savedCart);
 
-        // Tạo interval để kiểm tra định kỳ (mỗi 5 phút)
         const checkInterval = setInterval(() => {
-            const currentCart = CartStorage.getCart(tableId, expirationHours);
+            const currentCart = CartStorage.getCart(expirationHours);
             if (currentCart.length === 0 && cart.length > 0) {
                 setCart([]);
             }
         }, 5 * 60 * 1000);
 
         return () => clearInterval(checkInterval);
-    }, [tableId, expirationHours]);
+    }, [expirationHours]);
 
-    // Save vào storage khi cart thay đổi
     useEffect(() => {
-        if (tableId && cart.length >= 0) {
-            CartStorage.setCart(tableId, cart);
+        if (cart.length >= 0) {
+            CartStorage.setCart(cart);
         }
-    }, [cart, tableId]);
+    }, [cart]);
 
     const addItem = (item) => {
         setCart(prev => [...prev, item]);
@@ -44,9 +38,7 @@ export function useCart(tableId, expirationHours) {
 
     const clearCart = () => {
         setCart([]);
-        if (tableId) {
-            CartStorage.clearCart(tableId);
-        }
+        CartStorage.clearCart();
     };
 
     const getTotalPrice = () => {
@@ -58,7 +50,7 @@ export function useCart(tableId, expirationHours) {
     };
 
     const getRemainingTime = () => {
-        return CartStorage.getRemainingTime(tableId, expirationHours);
+        return CartStorage.getRemainingTime(expirationHours);
     };
 
     return {
