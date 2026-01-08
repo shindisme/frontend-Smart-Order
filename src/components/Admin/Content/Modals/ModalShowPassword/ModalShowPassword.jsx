@@ -26,7 +26,7 @@ function ModalShowPassword({ show, data, onClose }) {
                 <div className="alert alert-warning">
                     <small>
                         <i className="bi bi-exclamation-triangle me-2"></i>
-                        <strong>Lưu ý:</strong> Hãy sao chép và gửi thông tin này cho nhân viên. Mật khẩu sẽ không hiển thị lại!
+                        <strong>Lưu ý:</strong> Tài khoản đã được cấp qua email của nhân viên.
                     </small>
                 </div>
 
