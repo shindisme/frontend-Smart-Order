@@ -1,17 +1,69 @@
 // src/utils/cartStorage.js
 
-// ✅ THÊM: Tạo session_id unique cho mỗi điện thoại
 export const getSessionId = () => {
     const key = 'userSessionId';
     let sessionId = localStorage.getItem(key);
 
     if (!sessionId) {
-        // Tạo session_id unique: session_timestamp_randomstring
         sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
         localStorage.setItem(key, sessionId);
     }
 
     return sessionId;
+};
+
+// ✅ THÊM: Quản lý danh sách order_id của user này
+export const MyOrders = {
+    // Lưu order_id vừa tạo
+    addOrderId: (orderId) => {
+        try {
+            const key = 'myOrderIds';
+            const existing = localStorage.getItem(key);
+            const orderIds = existing ? JSON.parse(existing) : [];
+
+            if (!orderIds.includes(orderId)) {
+                orderIds.push(orderId);
+                localStorage.setItem(key, JSON.stringify(orderIds));
+            }
+        } catch (error) {
+            console.error('Lỗi addOrderId:', error);
+        }
+    },
+
+    // Lấy danh sách order_id của mình
+    getOrderIds: () => {
+        try {
+            const key = 'myOrderIds';
+            const existing = localStorage.getItem(key);
+            return existing ? JSON.parse(existing) : [];
+        } catch (error) {
+            console.error('Lỗi getOrderIds:', error);
+            return [];
+        }
+    },
+
+    // Xóa order_id (khi hủy)
+    removeOrderId: (orderId) => {
+        try {
+            const key = 'myOrderIds';
+            const existing = localStorage.getItem(key);
+            const orderIds = existing ? JSON.parse(existing) : [];
+
+            const filtered = orderIds.filter(id => id !== orderId);
+            localStorage.setItem(key, JSON.stringify(filtered));
+        } catch (error) {
+            console.error('Lỗi removeOrderId:', error);
+        }
+    },
+
+    // Xóa tất cả
+    clearOrderIds: () => {
+        try {
+            localStorage.removeItem('myOrderIds');
+        } catch (error) {
+            console.error('Lỗi clearOrderIds:', error);
+        }
+    }
 };
 
 export const CartStorage = {

@@ -6,7 +6,7 @@ import { toast } from 'react-toastify';
 import { IoArrowUndoSharp } from "react-icons/io5";
 import orderService from '../../services/orderService';
 import invoiceService from '../../services/invoiceService';
-import { getSessionId } from '../../utils/cartStorage';  // ← THÊM IMPORT
+import { MyOrders } from '../../utils/cartStorage';
 import {
     MdPayment,
     MdCancel,
@@ -24,7 +24,6 @@ function OrderTracking() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
-    const sessionId = getSessionId();  // ← THÊM ĐÂY
 
     const [pendingInvoice, setPendingInvoice] = useState(null);
     const [paidInvoices, setPaidInvoices] = useState([]);
@@ -43,45 +42,95 @@ function OrderTracking() {
         try {
             setLoading(true);
 
+            const myOrderIds = MyOrders.getOrderIds();
+            console.log('📋 My order IDs:', myOrderIds);
+
+            // ✅ Nếu không có order_id → Set state về empty và return
+            if (myOrderIds.length === 0) {
+                console.log('⚠️ Không có order_id nào trong localStorage');
+                setPendingInvoice(null);
+                setPaidInvoices([]);
+                setLoading(false);
+                return;
+            }
+
             const invoicesRes = await invoiceService.getAll();
+            console.log('📦 All invoices:', invoicesRes?.data);
 
             if (invoicesRes?.data) {
-                // ✅ FILTER theo table_id + session_id
-                const myInvoices = invoicesRes.data.filter(inv =>
-                    String(inv.table_id) === String(tableId) &&
-                    inv.session_id === sessionId  // ← THÊM ĐÂY!
+                const tableInvoices = invoicesRes.data.filter(inv =>
+                    String(inv.table_id) === String(tableId)
                 );
+                console.log(`📦 Table ${tableId} invoices:`, tableInvoices);
+
+                // ✅ LOAD DETAIL cho tất cả invoices
+                const invoicesWithDetails = await Promise.all(
+                    tableInvoices.map(async (inv) => {
+                        try {
+                            const detailRes = await invoiceService.getById(inv.invoice_id);
+                            console.log(`✅ Invoice ${inv.invoice_id} details:`, detailRes?.data);
+                            return detailRes?.data || inv;
+                        } catch (err) {
+                            console.error(`❌ Error loading invoice ${inv.invoice_id}:`, err);
+                            return inv;
+                        }
+                    })
+                );
+
+                console.log('📦 Invoices with details:', invoicesWithDetails);
+
+                // ✅ FILTER invoices
+                const myInvoices = invoicesWithDetails.map(inv => {
+                    if (!inv.orders || inv.orders.length === 0) {
+                        console.log(`⚠️ Invoice ${inv.invoice_id} không có orders`);
+                        return null;
+                    }
+
+                    const myOrders = inv.orders.filter(order => {
+                        const isMyOrder = myOrderIds.includes(order.order_id);
+                        console.log(`Order ${order.order_id}: ${isMyOrder ? '✅ CỦA TÔI' : '❌ NGƯỜI KHÁC'}`);
+                        return isMyOrder;
+                    });
+
+                    if (myOrders.length === 0) {
+                        console.log(`⚠️ Invoice ${inv.invoice_id} không có order của tôi`);
+                        return null;
+                    }
+
+                    const myTotal = myOrders.reduce((sum, order) => {
+                        const orderTotal = order.items?.reduce((s, item) => s + item.total, 0) || 0;
+                        return sum + orderTotal;
+                    }, 0);
+
+                    console.log(`✅ Invoice ${inv.invoice_id} có ${myOrders.length} orders, total: ${myTotal}`);
+
+                    return {
+                        ...inv,
+                        orders: myOrders,
+                        total: myTotal,
+                        final_total: myTotal - (inv.discount || 0)
+                    };
+                }).filter(inv => inv !== null);
+
+                console.log('✅ My invoices:', myInvoices);
 
                 const pending = myInvoices.find(inv => inv.status === 0);
                 const paid = myInvoices.filter(inv => inv.status === 1);
 
-                if (pending) {
-                    try {
-                        const detailRes = await invoiceService.getById(pending.invoice_id);
-                        setPendingInvoice(detailRes?.data || pending);
-                    } catch (err) {
-                        console.error('Error loading pending invoice:', err);
-                        setPendingInvoice(pending);
-                    }
-                }
+                console.log('✅ Pending invoice:', pending);
+                console.log('✅ Paid invoices:', paid);
 
-                if (paid.length > 0) {
-                    const paidWithDetails = await Promise.all(
-                        paid.map(async (inv) => {
-                            try {
-                                const detailRes = await invoiceService.getById(inv.invoice_id);
-                                return detailRes?.data || inv;
-                            } catch (err) {
-                                console.error('Error loading paid invoice:', err);
-                                return inv;
-                            }
-                        })
-                    );
-                    setPaidInvoices(paidWithDetails);
-                }
+                setPendingInvoice(pending || null);
+                setPaidInvoices(paid);
+            } else {
+                console.log('⚠️ Không có data từ API');
+                setPendingInvoice(null);
+                setPaidInvoices([]);
             }
         } catch (error) {
-            console.error('Error loading data:', error);
+            console.error('❌ Error loading data:', error);
+            setPendingInvoice(null);
+            setPaidInvoices([]);
             if (error.response?.status !== 404) {
                 toast.error('Lỗi tải dữ liệu');
             }
@@ -89,8 +138,6 @@ function OrderTracking() {
             setLoading(false);
         }
     };
-
-    // ... giữ nguyên các functions khác
 
     const handleAddMore = () => {
         navigate(`/?table=${tableId}`);
@@ -121,7 +168,10 @@ function OrderTracking() {
             }
 
             await Promise.all(
-                pendingOrders.map(order => orderService.delete(order.order_id))
+                pendingOrders.map(async (order) => {
+                    await orderService.delete(order.order_id);
+                    MyOrders.removeOrderId(order.order_id);
+                })
             );
 
             toast.success('Đã hủy đơn hàng chờ xử lý');
@@ -233,8 +283,6 @@ function OrderTracking() {
             </div>
         </>
     );
-
-    // ... giữ nguyên phần render JSX
 
     if (loading) {
         return (
