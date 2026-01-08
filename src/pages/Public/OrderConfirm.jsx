@@ -3,6 +3,7 @@ import { NavLink, useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useCart } from '../../hooks/useCart';
 import orderService from '../../services/orderService';
+import { getSessionId } from '../../utils/cartStorage';  // ← THÊM IMPORT
 import styles from './OrderConfirm.module.css';
 import { IoArrowUndoSharp } from "react-icons/io5";
 
@@ -11,7 +12,7 @@ function OrderConfirm() {
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
 
-    const { cart, clearCart, getTotalPrice, isEmpty } = useCart(tableId, 1);
+    const { cart, clearCart, getTotalPrice, isEmpty } = useCart(1);  // ← Đã sửa
 
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -33,6 +34,8 @@ function OrderConfirm() {
         setIsSubmitting(true);
 
         try {
+            const sessionId = getSessionId();  // ← THÊM ĐÂY
+
             const orderItems = cart.map((item) => {
                 const itemId = item.id || item.itemId || item.item_id;
 
@@ -53,6 +56,7 @@ function OrderConfirm() {
 
             await orderService.create({
                 table_id: tableId,
+                session_id: sessionId,  // ← THÊM ĐÂY
                 user_id: null,
                 items: orderItems,
                 note: null
@@ -76,6 +80,8 @@ function OrderConfirm() {
         }
     };
 
+    // ... giữ nguyên JSX render
+
     if (!tableId) {
         return (
             <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -88,8 +94,6 @@ function OrderConfirm() {
             </div>
         );
     }
-
-    // Nếu cart empty, component sẽ redirect ở useEffect
 
     return (
         <>

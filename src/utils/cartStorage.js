@@ -1,3 +1,19 @@
+// src/utils/cartStorage.js
+
+// ✅ THÊM: Tạo session_id unique cho mỗi điện thoại
+export const getSessionId = () => {
+    const key = 'userSessionId';
+    let sessionId = localStorage.getItem(key);
+
+    if (!sessionId) {
+        // Tạo session_id unique: session_timestamp_randomstring
+        sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 15);
+        localStorage.setItem(key, sessionId);
+    }
+
+    return sessionId;
+};
+
 export const CartStorage = {
     getKey: () => 'guestCart',
     getTimestampKey: () => 'guestCart_timestamp',
@@ -25,7 +41,7 @@ export const CartStorage = {
 
             return JSON.parse(cart);
         } catch (error) {
-            console.error('Lỗi:', error);
+            console.error('Lỗi getCart:', error);
             return [];
         }
     },
@@ -38,7 +54,7 @@ export const CartStorage = {
             localStorage.setItem(key, JSON.stringify(cart));
             localStorage.setItem(timestampKey, Date.now().toString());
         } catch (error) {
-            console.error('Lỗi:', error);
+            console.error('Lỗi setCart:', error);
         }
     },
 

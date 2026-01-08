@@ -1,9 +1,12 @@
+// src/pages/OrderTracking/OrderTracking.jsx
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { IoArrowUndoSharp } from "react-icons/io5";
 import orderService from '../../services/orderService';
 import invoiceService from '../../services/invoiceService';
+import { getSessionId } from '../../utils/cartStorage';  // ← THÊM IMPORT
 import {
     MdPayment,
     MdCancel,
@@ -21,6 +24,7 @@ function OrderTracking() {
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
     const tableId = searchParams.get('table');
+    const sessionId = getSessionId();  // ← THÊM ĐÂY
 
     const [pendingInvoice, setPendingInvoice] = useState(null);
     const [paidInvoices, setPaidInvoices] = useState([]);
@@ -42,10 +46,14 @@ function OrderTracking() {
             const invoicesRes = await invoiceService.getAll();
 
             if (invoicesRes?.data) {
-                const tableInvoices = invoicesRes.data.filter(inv => String(inv.table_id) === String(tableId));
+                // ✅ FILTER theo table_id + session_id
+                const myInvoices = invoicesRes.data.filter(inv =>
+                    String(inv.table_id) === String(tableId) &&
+                    inv.session_id === sessionId  // ← THÊM ĐÂY!
+                );
 
-                const pending = tableInvoices.find(inv => inv.status === 0);
-                const paid = tableInvoices.filter(inv => inv.status === 1);
+                const pending = myInvoices.find(inv => inv.status === 0);
+                const paid = myInvoices.filter(inv => inv.status === 1);
 
                 if (pending) {
                     try {
@@ -81,6 +89,8 @@ function OrderTracking() {
             setLoading(false);
         }
     };
+
+    // ... giữ nguyên các functions khác
 
     const handleAddMore = () => {
         navigate(`/?table=${tableId}`);
@@ -133,7 +143,6 @@ function OrderTracking() {
 
     const formatMoney = (num) => num?.toLocaleString('vi-VN') + 'đ';
     const formatTime = (date) => new Date(date).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' });
-    const formatDate = (date) => new Date(date).toLocaleDateString('vi-VN');
 
     const renderInvoiceDetail = (invoice, isPaid = false) => (
         <>
@@ -224,6 +233,8 @@ function OrderTracking() {
             </div>
         </>
     );
+
+    // ... giữ nguyên phần render JSX
 
     if (loading) {
         return (
