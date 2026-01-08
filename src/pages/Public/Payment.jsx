@@ -1,3 +1,5 @@
+// src/pages/Payment/Payment.jsx
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -66,6 +68,7 @@ function Payment() {
                     const detailRes = await invoiceService.getById(pending.invoice_id);
                     setInvoice(detailRes?.data || pending);
                 } else {
+                    setError('Không tìm thấy hóa đơn chưa thanh toán');
                     toast.error('Không tìm thấy hóa đơn chưa thanh toán');
                     setTimeout(() => navigate(`/order?table=${tableId}`), 1500);
                 }
@@ -73,6 +76,7 @@ function Payment() {
                 throw new Error('No data in response');
             }
         } catch (error) {
+            console.error('Error loading invoice:', error);
             setError(error.message || 'Lỗi tải hóa đơn');
             toast.error('Lỗi tải hóa đơn');
             setTimeout(() => navigate(`/order?table=${tableId}`), 2000);
@@ -206,13 +210,24 @@ function Payment() {
         return (num || 0).toLocaleString('vi-VN') + 'đ';
     };
 
+    // ✅ THÊM LOADING STATE
+    if (loading) {
+        return (
+            <div className={styles.container}>
+                <div className={styles.loading}>
+                    <p>Đang tải hóa đơn...</p>
+                </div>
+            </div>
+        );
+    }
 
-    if (error) {
+    // ✅ THÊM ERROR STATE
+    if (error || !invoice) {
         return (
             <div className={styles.container}>
                 <div className={styles.error}>
                     <h2>Có lỗi xảy ra</h2>
-                    <p>{error}</p>
+                    <p>{error || 'Không tìm thấy hóa đơn'}</p>
                     <button className={styles.btnPrimary} onClick={() => navigate(`/order?table=${tableId}`)}>
                         Quay lại đơn hàng
                     </button>
@@ -220,8 +235,6 @@ function Payment() {
             </div>
         );
     }
-
-
 
     const discount = calculateDiscount();
     const finalTotal = getFinalTotal();
@@ -241,12 +254,12 @@ function Payment() {
 
                     <div className={styles.row}>
                         <span><MdTableRestaurant size={20} /> Bàn:</span>
-                        <strong>{invoice.table_name}</strong>
+                        <strong>{invoice.table_name || 'N/A'}</strong>
                     </div>
 
                     <div className={styles.row}>
                         <span><MdReceiptLong size={20} /> Mã HĐ:</span>
-                        <strong>{invoice.invoice_id.slice(0, 8).toUpperCase()}</strong>
+                        <strong>{invoice.invoice_id?.slice(0, 8).toUpperCase() || 'N/A'}</strong>
                     </div>
 
                     <div className={styles.divider}></div>

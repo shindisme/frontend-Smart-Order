@@ -12,11 +12,8 @@ function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
         onClose();
     };
 
-    // ✅ Build allItems từ order.items, lấy đầy đủ tên + options (topping)
     const allItems = invoice.orders?.flatMap(order =>
         (order.items || []).map(item => {
-            // Tính đơn giá (nếu có tổng giá đã bao gồm topping, cần chia ra)
-            // Giả sử item.total là tổng với topping, item.price là giá gốc
             const basePrice = item.price || (item.total / item.quantity);
 
             return {
@@ -24,7 +21,6 @@ function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
                 quantity: item.quantity,
                 price: basePrice,
                 total: item.total,
-                // Lấy options (topping) - backend trả về hoặc tính từ options_order_details
                 options: item.options || item.option_details || []
             };
         })
@@ -41,7 +37,7 @@ function ModalInvoiceDetail({ show, invoice, onClose, onPay, onRefresh }) {
                 discount: invoice.discount || 0,
                 final_total: invoice.final_total,
                 created_at: invoice.created_at,
-                items: allItems // Pass items với options
+                items: allItems
             }, {
                 name: 'QUAN KUN GA CHU',
                 address: '180 Cao Lo, Tp. HCM',

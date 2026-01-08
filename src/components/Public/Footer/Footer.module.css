@@ -35,7 +35,6 @@
     transform: translateX(-50%);
 }
 
-/* Cart Button */
 .cartButton {
     position: relative;
     border: none;
@@ -55,7 +54,6 @@
     transform: scale(0.92);
 }
 
-/* Cart Badge */
 .cartBadge {
     position: absolute;
     top: 12px;
@@ -70,7 +68,6 @@
     border-radius: 50%;
 }
 
-/* Confirm Button */
 .confirmButton {
     border: none;
     font-size: 20px;

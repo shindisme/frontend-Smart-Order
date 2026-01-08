@@ -21,7 +21,7 @@ function Header() {
       toast.success("Đăng xuất thành công");
       navigate("/login");
     } catch (error) {
-      console.log('Logout error:', error);
+      console.log('Lỗi:', error);
       navigate("/login");
     }
   };
