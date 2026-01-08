@@ -1,5 +1,3 @@
-// src/pages/OrderTracking/OrderTracking.jsx
-
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -43,11 +41,8 @@ function OrderTracking() {
             setLoading(true);
 
             const myOrderIds = MyOrders.getOrderIds();
-            console.log('📋 My order IDs:', myOrderIds);
 
-            // ✅ Nếu không có order_id → Set state về empty và return
             if (myOrderIds.length === 0) {
-                console.log('⚠️ Không có order_id nào trong localStorage');
                 setPendingInvoice(null);
                 setPaidInvoices([]);
                 setLoading(false);
@@ -55,45 +50,35 @@ function OrderTracking() {
             }
 
             const invoicesRes = await invoiceService.getAll();
-            console.log('📦 All invoices:', invoicesRes?.data);
 
             if (invoicesRes?.data) {
                 const tableInvoices = invoicesRes.data.filter(inv =>
                     String(inv.table_id) === String(tableId)
                 );
-                console.log(`📦 Table ${tableId} invoices:`, tableInvoices);
 
-                // ✅ LOAD DETAIL cho tất cả invoices
                 const invoicesWithDetails = await Promise.all(
                     tableInvoices.map(async (inv) => {
                         try {
                             const detailRes = await invoiceService.getById(inv.invoice_id);
-                            console.log(`✅ Invoice ${inv.invoice_id} details:`, detailRes?.data);
                             return detailRes?.data || inv;
-                        } catch (err) {
-                            console.error(`❌ Error loading invoice ${inv.invoice_id}:`, err);
+                        } catch (error) {
+                            console.log(error);
                             return inv;
                         }
                     })
                 );
 
-                console.log('📦 Invoices with details:', invoicesWithDetails);
-
-                // ✅ FILTER invoices
                 const myInvoices = invoicesWithDetails.map(inv => {
                     if (!inv.orders || inv.orders.length === 0) {
-                        console.log(`⚠️ Invoice ${inv.invoice_id} không có orders`);
                         return null;
                     }
 
                     const myOrders = inv.orders.filter(order => {
                         const isMyOrder = myOrderIds.includes(order.order_id);
-                        console.log(`Order ${order.order_id}: ${isMyOrder ? '✅ CỦA TÔI' : '❌ NGƯỜI KHÁC'}`);
                         return isMyOrder;
                     });
 
                     if (myOrders.length === 0) {
-                        console.log(`⚠️ Invoice ${inv.invoice_id} không có order của tôi`);
                         return null;
                     }
 
@@ -101,8 +86,6 @@ function OrderTracking() {
                         const orderTotal = order.items?.reduce((s, item) => s + item.total, 0) || 0;
                         return sum + orderTotal;
                     }, 0);
-
-                    console.log(`✅ Invoice ${inv.invoice_id} có ${myOrders.length} orders, total: ${myTotal}`);
 
                     return {
                         ...inv,
@@ -112,23 +95,17 @@ function OrderTracking() {
                     };
                 }).filter(inv => inv !== null);
 
-                console.log('✅ My invoices:', myInvoices);
 
                 const pending = myInvoices.find(inv => inv.status === 0);
                 const paid = myInvoices.filter(inv => inv.status === 1);
 
-                console.log('✅ Pending invoice:', pending);
-                console.log('✅ Paid invoices:', paid);
-
                 setPendingInvoice(pending || null);
                 setPaidInvoices(paid);
             } else {
-                console.log('⚠️ Không có data từ API');
                 setPendingInvoice(null);
                 setPaidInvoices([]);
             }
         } catch (error) {
-            console.error('❌ Error loading data:', error);
             setPendingInvoice(null);
             setPaidInvoices([]);
             if (error.response?.status !== 404) {

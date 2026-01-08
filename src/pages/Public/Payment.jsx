@@ -221,16 +221,7 @@ function Payment() {
         );
     }
 
-    if (!invoice) {
-        return (
-            <div className={styles.container}>
-                <div className={styles.empty}>
-                    <h2>Không tìm thấy hóa đơn</h2>
-                    <p>Đang chuyển về trang đơn hàng...</p>
-                </div>
-            </div>
-        );
-    }
+
 
     const discount = calculateDiscount();
     const finalTotal = getFinalTotal();
