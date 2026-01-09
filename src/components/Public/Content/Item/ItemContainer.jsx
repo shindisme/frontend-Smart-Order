@@ -12,12 +12,15 @@ function ItemContainer({ activeCategoryId, searchTerm, setSelectedItem, setShowO
         ? items
         : items.filter(item => item.category_id === activeCategoryId);
 
+
+    const availableItems = itemsByCategory.filter(item => item.is_available !== 1);
+
     // lọc theo search
     const filteredItems = searchTerm
-        ? itemsByCategory.filter(item =>
+        ? availableItems.filter(item =>
             searchMatch(item.name, searchTerm)
         )
-        : itemsByCategory;
+        : availableItems;
 
     useEffect(() => {
         const fetchItems = async () => {

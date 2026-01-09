@@ -104,7 +104,6 @@ function ModalCRUCoupon({ show, mode, data, onClose, onSubmit }) {
                                     value={formData.code}
                                     onChange={handleChange}
                                     readOnly={isReadOnly}
-                                    placeholder="VD: SUMMER50"
                                     style={{ textTransform: 'uppercase' }}
                                     maxLength={20}
                                 />
@@ -130,7 +129,6 @@ function ModalCRUCoupon({ show, mode, data, onClose, onSubmit }) {
                             value={formData.description}
                             onChange={handleChange}
                             readOnly={isReadOnly}
-                            placeholder="Mô tả chương trình khuyến mãi"
                             maxLength={255}
                         />
                     </Form.Group>
