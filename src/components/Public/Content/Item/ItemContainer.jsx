@@ -13,7 +13,7 @@ function ItemContainer({ activeCategoryId, searchTerm, setSelectedItem, setShowO
         : items.filter(item => item.category_id === activeCategoryId);
 
 
-    const availableItems = itemsByCategory.filter(item => item.is_available !== 1);
+    const availableItems = itemsByCategory.filter(item => item.is_available !== 0);
 
     // lọc theo search
     const filteredItems = searchTerm
